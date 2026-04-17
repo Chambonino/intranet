@@ -20,9 +20,7 @@ CREATE TABLE IF NOT EXISTS administradores (
     ultimo_acceso DATETIME NULL
 ) ENGINE=InnoDB;
 
--- Usuario admin por defecto (password: admin123)
-INSERT INTO administradores (usuario, password, nombre_completo, email) 
-VALUES ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Administrador', 'admin@empresa.com');
+-- NO insertar usuario aquí. Ejecutar install.php para crear el administrador con hash correcto.
 
 -- =====================================================
 -- TABLA DE DEPARTAMENTOS
