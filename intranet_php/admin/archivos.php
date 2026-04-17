@@ -18,10 +18,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $activo = isset($_POST['activo']) ? 1 : 0;
     
     $archivo = null;
-    if (isset($_FILES['archivo']) && $_FILES['archivo']['error'] === UPLOAD_ERR_OK) {
+    if (isset($_FILES['archivo']) && $_FILES['archivo']['error'] !== UPLOAD_ERR_NO_FILE) {
         $result = uploadFile($_FILES['archivo'], 'files', ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'zip', 'rar']);
         if ($result['success']) {
             $archivo = $result['filename'];
+        } else {
+            setFlashMessage($result['message'], 'danger');
+            header('Location: archivos.php');
+            exit;
         }
     }
     

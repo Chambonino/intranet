@@ -18,10 +18,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $activo = isset($_POST['activo']) ? 1 : 0;
     
     $imagen = null;
-    if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
+    if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] !== UPLOAD_ERR_NO_FILE) {
         $result = uploadFile($_FILES['imagen'], 'articles', ['jpg', 'jpeg', 'png', 'gif', 'webp']);
         if ($result['success']) {
             $imagen = $result['filename'];
+        } else {
+            setFlashMessage($result['message'], 'danger');
+            header('Location: articulos.php');
+            exit;
         }
     }
     

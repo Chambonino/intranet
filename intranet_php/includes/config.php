@@ -49,26 +49,43 @@ function sanitize($data) {
 /**
  * Función para subir archivos
  */
-function uploadFile($file, $destination, $allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx']) {
+function uploadFile($file, $destination, $allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'zip', 'rar']) {
     if ($file['error'] !== UPLOAD_ERR_OK) {
-        return ['success' => false, 'message' => 'Error al subir el archivo'];
+        $errors = [
+            UPLOAD_ERR_INI_SIZE => 'El archivo excede el tamaño máximo permitido por PHP (upload_max_filesize)',
+            UPLOAD_ERR_FORM_SIZE => 'El archivo excede el tamaño máximo del formulario',
+            UPLOAD_ERR_PARTIAL => 'El archivo se subió parcialmente',
+            UPLOAD_ERR_NO_FILE => 'No se seleccionó ningún archivo',
+            UPLOAD_ERR_NO_TMP_DIR => 'Falta la carpeta temporal del servidor',
+            UPLOAD_ERR_CANT_WRITE => 'No se pudo escribir el archivo en disco',
+        ];
+        $msg = $errors[$file['error']] ?? 'Error desconocido al subir el archivo (código: ' . $file['error'] . ')';
+        return ['success' => false, 'message' => $msg];
     }
     
     $fileInfo = pathinfo($file['name']);
-    $extension = strtolower($fileInfo['extension']);
+    $extension = strtolower($fileInfo['extension'] ?? '');
     
     if (!in_array($extension, $allowedTypes)) {
-        return ['success' => false, 'message' => 'Tipo de archivo no permitido'];
+        return ['success' => false, 'message' => 'Tipo de archivo no permitido: .' . $extension];
+    }
+    
+    // Crear carpeta de destino si no existe
+    $targetDir = UPLOAD_PATH . $destination;
+    if (!is_dir($targetDir)) {
+        if (!mkdir($targetDir, 0777, true)) {
+            return ['success' => false, 'message' => 'No se pudo crear la carpeta: ' . $targetDir];
+        }
     }
     
     $newName = uniqid() . '_' . time() . '.' . $extension;
-    $targetPath = UPLOAD_PATH . $destination . '/' . $newName;
+    $targetPath = $targetDir . '/' . $newName;
     
     if (move_uploaded_file($file['tmp_name'], $targetPath)) {
         return ['success' => true, 'filename' => $newName];
     }
     
-    return ['success' => false, 'message' => 'Error al mover el archivo'];
+    return ['success' => false, 'message' => 'Error al mover el archivo. Verifique permisos de la carpeta: ' . $targetDir];
 }
 
 /**

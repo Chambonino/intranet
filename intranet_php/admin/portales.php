@@ -18,10 +18,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $activo = isset($_POST['activo']) ? 1 : 0;
     
     $logo = null;
-    if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+    if (isset($_FILES['logo']) && $_FILES['logo']['error'] !== UPLOAD_ERR_NO_FILE) {
         $result = uploadFile($_FILES['logo'], 'portals', ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']);
         if ($result['success']) {
             $logo = $result['filename'];
+        } else {
+            setFlashMessage($result['message'], 'danger');
+            header('Location: portales.php');
+            exit;
         }
     }
     

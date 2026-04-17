@@ -20,10 +20,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $activo = isset($_POST['activo']) ? 1 : 0;
     
     $foto = null;
-    if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+    if (isset($_FILES['foto']) && $_FILES['foto']['error'] !== UPLOAD_ERR_NO_FILE) {
         $result = uploadFile($_FILES['foto'], 'employees', ['jpg', 'jpeg', 'png', 'gif', 'webp']);
         if ($result['success']) {
             $foto = $result['filename'];
+        } else {
+            setFlashMessage($result['message'], 'danger');
+            header('Location: cumpleanos.php');
+            exit;
         }
     }
     

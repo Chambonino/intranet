@@ -20,16 +20,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Procesar imagen
     $imagen = null;
-    if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
+    $uploadError = '';
+    if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] !== UPLOAD_ERR_NO_FILE) {
         $result = uploadFile($_FILES['imagen'], 'slider', ['jpg', 'jpeg', 'png', 'gif', 'webp']);
         if ($result['success']) {
             $imagen = $result['filename'];
+        } else {
+            $uploadError = $result['message'];
         }
     }
     
     if ($_POST['form_action'] === 'add') {
         if (!$imagen) {
-            setFlashMessage('Debe seleccionar una imagen', 'danger');
+            setFlashMessage($uploadError ?: 'Debe seleccionar una imagen', 'danger');
         } else {
             $stmt = $pdo->prepare("INSERT INTO slider_noticias (titulo, descripcion, imagen, enlace, orden, activo) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->execute([$titulo, $descripcion, $imagen, $enlace, $orden, $activo]);

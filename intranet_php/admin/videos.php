@@ -19,14 +19,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $archivo_video = null;
     $thumbnail = null;
     
-    if (isset($_FILES['archivo_video']) && $_FILES['archivo_video']['error'] === UPLOAD_ERR_OK) {
-        $result = uploadFile($_FILES['archivo_video'], 'videos', ['mp4', 'webm', 'ogg', 'mov']);
+    if (isset($_FILES['archivo_video']) && $_FILES['archivo_video']['error'] !== UPLOAD_ERR_NO_FILE) {
+        $result = uploadFile($_FILES['archivo_video'], 'videos', ['mp4', 'webm', 'ogg', 'mov', 'avi']);
         if ($result['success']) {
             $archivo_video = $result['filename'];
+        } else {
+            setFlashMessage($result['message'], 'danger');
+            header('Location: videos.php');
+            exit;
         }
     }
     
-    if (isset($_FILES['thumbnail']) && $_FILES['thumbnail']['error'] === UPLOAD_ERR_OK) {
+    if (isset($_FILES['thumbnail']) && $_FILES['thumbnail']['error'] !== UPLOAD_ERR_NO_FILE) {
         $result = uploadFile($_FILES['thumbnail'], 'videos', ['jpg', 'jpeg', 'png', 'gif', 'webp']);
         if ($result['success']) {
             $thumbnail = $result['filename'];
