@@ -97,10 +97,10 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                     <div id="headerDate" style="font-size:0.85rem;color:var(--text-secondary);"></div>
                 </div>
                 <div id="weatherWidget" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.1);padding:10px 18px;border-radius:10px;">
-                    <i class="fas fa-cloud-sun" style="font-size:1.8rem;color:#FFD54F;"></i>
+                    <i class="fas fa-cloud-sun" style="font-size:1.8rem;color:#FFD54F;" id="weatherIcon"></i>
                     <div>
                         <div id="weatherTemp" style="font-size:1.3rem;font-weight:700;">--&deg;C</div>
-                        <div id="weatherDesc" style="font-size:0.7rem;color:var(--text-secondary);">Cargando...</div>
+                        <div id="weatherDesc" style="font-size:0.7rem;color:var(--text-secondary);">Clima</div>
                     </div>
                 </div>
                 <a href="calendario.php" style="color:white;text-decoration:none;font-size:0.85rem;"><i class="fas fa-calendar-alt"></i> Calendario</a>
@@ -260,11 +260,11 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 <div style="position:relative;overflow:hidden;">
                     <div class="slider-track" id="videoTrack" style="display:flex;gap:10px;padding:15px 20px 20px;transition:transform 0.5s ease;">
                         <?php if (count($videos) > 0): foreach ($videos as $vid): ?>
-                        <div style="min-width:220px;flex-shrink:0;border-radius:8px;overflow:hidden;position:relative;height:130px;background:#111;">
+                        <div style="min-width:220px;flex-shrink:0;border-radius:8px;overflow:hidden;position:relative;height:130px;background:#111;cursor:pointer;" onclick="openVideoModal('assets/uploads/videos/<?php echo $vid['archivo_video']; ?>', '<?php echo htmlspecialchars($vid['titulo'], ENT_QUOTES); ?>')">
                             <?php if ($vid['thumbnail']): ?>
                             <img src="assets/uploads/videos/<?php echo $vid['thumbnail']; ?>" style="width:100%;height:100%;object-fit:cover;">
                             <?php else: ?>
-                            <video style="width:100%;height:100%;object-fit:cover;"><source src="assets/uploads/videos/<?php echo $vid['archivo_video']; ?>" type="video/mp4"></video>
+                            <div style="width:100%;height:100%;background:#222;display:flex;align-items:center;justify-content:center;"><i class="fas fa-film" style="font-size:2rem;color:#555;"></i></div>
                             <?php endif; ?>
                             <div class="video-play-icon"><i class="fas fa-play"></i></div>
                             <div class="video-overlay"><?php echo htmlspecialchars($vid['titulo']); ?></div>
@@ -322,7 +322,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 <div style="position:relative;overflow:hidden;">
                     <div class="slider-track" id="galleryTrack" style="display:flex;gap:8px;padding:15px 20px 20px;transition:transform 0.5s ease;">
                         <?php if (count($galeriaFotos) > 0): foreach ($galeriaFotos as $foto): ?>
-                        <div style="min-width:160px;height:110px;flex-shrink:0;border-radius:8px;overflow:hidden;">
+                        <div style="min-width:160px;height:110px;flex-shrink:0;border-radius:8px;overflow:hidden;cursor:pointer;" onclick="openImageModal('assets/uploads/gallery/<?php echo $foto['imagen']; ?>', '<?php echo htmlspecialchars($foto['titulo'] ?? '', ENT_QUOTES); ?>')">
                             <img src="assets/uploads/gallery/<?php echo $foto['imagen']; ?>" style="width:100%;height:100%;object-fit:cover;transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
                         </div>
                         <?php endforeach; else: ?>
@@ -340,9 +340,11 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 <div style="position:relative;overflow:hidden;">
                     <div class="slider-track" id="videoTrack2" style="display:flex;gap:10px;padding:15px 20px 20px;transition:transform 0.5s ease;">
                         <?php if (count($videos) > 0): foreach ($videos as $vid): ?>
-                        <div style="min-width:200px;flex-shrink:0;border-radius:8px;overflow:hidden;position:relative;height:120px;background:#111;">
+                        <div style="min-width:200px;flex-shrink:0;border-radius:8px;overflow:hidden;position:relative;height:120px;background:#111;cursor:pointer;" onclick="openVideoModal('assets/uploads/videos/<?php echo $vid['archivo_video']; ?>', '<?php echo htmlspecialchars($vid['titulo'], ENT_QUOTES); ?>')">
                             <?php if ($vid['thumbnail']): ?>
                             <img src="assets/uploads/videos/<?php echo $vid['thumbnail']; ?>" style="width:100%;height:100%;object-fit:cover;">
+                            <?php else: ?>
+                            <div style="width:100%;height:100%;background:#222;display:flex;align-items:center;justify-content:center;"><i class="fas fa-film" style="font-size:2rem;color:#555;"></i></div>
                             <?php endif; ?>
                             <div class="video-play-icon"><i class="fas fa-play"></i></div>
                             <div class="video-overlay"><?php echo htmlspecialchars($vid['titulo']); ?></div>
@@ -487,19 +489,74 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
     updateClock();
     setInterval(updateClock, 1000);
 
-    // CLIMA (usando API gratuita wttr.in)
-    fetch('https://wttr.in/?format=%t|%C&lang=es')
-        .then(r => r.text())
+    // CLIMA - usando wttr.in con headers correctos
+    fetch('https://wttr.in/?format=j1')
+        .then(r => r.json())
         .then(data => {
-            const parts = data.split('|');
-            if (parts.length >= 2) {
-                document.getElementById('weatherTemp').textContent = parts[0].trim();
-                document.getElementById('weatherDesc').textContent = parts[1].trim();
+            try {
+                const temp = data.current_condition[0].temp_C;
+                const desc = data.current_condition[0].lang_es ? data.current_condition[0].lang_es[0].value : data.current_condition[0].weatherDesc[0].value;
+                document.getElementById('weatherTemp').textContent = temp + '°C';
+                document.getElementById('weatherDesc').textContent = desc;
+            } catch(e) {
+                document.getElementById('weatherTemp').textContent = '--°C';
+                document.getElementById('weatherDesc').textContent = 'Clima';
             }
         })
         .catch(() => {
-            document.getElementById('weatherDesc').textContent = 'Sin conexión';
+            document.getElementById('weatherTemp').textContent = '--°C';
+            document.getElementById('weatherDesc').textContent = 'Sin datos';
         });
+
+    // MODAL para imágenes (lightbox)
+    function openImageModal(src, title) {
+        let modal = document.getElementById('imageModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'imageModal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;';
+            modal.innerHTML = '<button onclick="this.parentElement.style.display=\'none\'" style="position:absolute;top:20px;right:20px;background:none;border:none;color:white;font-size:2rem;cursor:pointer;z-index:10000;"><i class="fas fa-times"></i></button><img id="modalImage" style="max-width:90%;max-height:80%;object-fit:contain;border-radius:10px;"><p id="modalCaption" style="color:white;margin-top:15px;font-size:1rem;"></p>';
+            modal.addEventListener('click', function(e) { if (e.target === modal) modal.style.display = 'none'; });
+            document.body.appendChild(modal);
+        }
+        document.getElementById('modalImage').src = src;
+        document.getElementById('modalCaption').textContent = title || '';
+        modal.style.display = 'flex';
+    }
+
+    // MODAL para videos
+    function openVideoModal(src, title) {
+        let modal = document.getElementById('videoModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'videoModal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;';
+            modal.innerHTML = '<button onclick="closeVideoModal()" style="position:absolute;top:20px;right:20px;background:none;border:none;color:white;font-size:2rem;cursor:pointer;z-index:10000;"><i class="fas fa-times"></i></button><video id="modalVideo" controls autoplay style="max-width:90%;max-height:75%;border-radius:10px;background:#000;"></video><p id="modalVideoTitle" style="color:white;margin-top:15px;font-size:1rem;"></p>';
+            modal.addEventListener('click', function(e) { if (e.target === modal) closeVideoModal(); });
+            document.body.appendChild(modal);
+        }
+        const video = document.getElementById('modalVideo');
+        video.src = src;
+        document.getElementById('modalVideoTitle').textContent = title || '';
+        modal.style.display = 'flex';
+        video.play();
+    }
+
+    function closeVideoModal() {
+        const modal = document.getElementById('videoModal');
+        const video = document.getElementById('modalVideo');
+        if (video) { video.pause(); video.src = ''; }
+        if (modal) modal.style.display = 'none';
+    }
+
+    // Cerrar modales con ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const imgModal = document.getElementById('imageModal');
+            if (imgModal) imgModal.style.display = 'none';
+            closeVideoModal();
+        }
+    });
     </script>
 </body>
 </html>
