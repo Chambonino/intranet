@@ -1,6 +1,6 @@
 <?php
 /**
- * Gestión de Eventos del Calendario
+ * Gestión de Eventos del Calendario (v2 - con archivo y departamento)
  */
 require_once '../includes/config.php';
 require_once '../includes/functions.php';
@@ -9,8 +9,8 @@ requireLogin();
 $action = $_GET['action'] ?? 'list';
 $id = $_GET['id'] ?? null;
 $flash = getFlashMessage();
+$departamentos = getDepartamentos($pdo);
 
-// Procesar formularios
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $titulo = sanitize($_POST['titulo']);
     $descripcion = sanitize($_POST['descripcion']);
@@ -19,22 +19,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $hora_fin = $_POST['hora_fin'] ?: null;
     $lugar = sanitize($_POST['lugar']);
     $color = $_POST['color'];
+    $departamento_id = $_POST['departamento_id'] ?: null;
     $activo = isset($_POST['activo']) ? 1 : 0;
     
+    // Subir archivo adjunto
+    $archivo = null;
+    if (isset($_FILES['archivo']) && $_FILES['archivo']['error'] !== UPLOAD_ERR_NO_FILE) {
+        $result = uploadFile($_FILES['archivo'], 'events', ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'pdf']);
+        if ($result['success']) {
+            $archivo = $result['filename'];
+        } else {
+            setFlashMessage($result['message'], 'danger');
+            header('Location: eventos.php');
+            exit;
+        }
+    }
+    
     if ($_POST['form_action'] === 'add') {
-        $stmt = $pdo->prepare("INSERT INTO eventos (titulo, descripcion, fecha_evento, hora_inicio, hora_fin, lugar, color, activo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$titulo, $descripcion, $fecha_evento, $hora_inicio, $hora_fin, $lugar, $color, $activo]);
+        $stmt = $pdo->prepare("INSERT INTO eventos (titulo, descripcion, fecha_evento, hora_inicio, hora_fin, lugar, archivo, color, departamento_id, activo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$titulo, $descripcion, $fecha_evento, $hora_inicio, $hora_fin, $lugar, $archivo, $color, $departamento_id, $activo]);
         setFlashMessage('Evento agregado correctamente', 'success');
     } elseif ($_POST['form_action'] === 'edit') {
-        $stmt = $pdo->prepare("UPDATE eventos SET titulo = ?, descripcion = ?, fecha_evento = ?, hora_inicio = ?, hora_fin = ?, lugar = ?, color = ?, activo = ? WHERE id = ?");
-        $stmt->execute([$titulo, $descripcion, $fecha_evento, $hora_inicio, $hora_fin, $lugar, $color, $activo, $_POST['id']]);
+        $sql = "UPDATE eventos SET titulo = ?, descripcion = ?, fecha_evento = ?, hora_inicio = ?, hora_fin = ?, lugar = ?, color = ?, departamento_id = ?, activo = ?";
+        $params = [$titulo, $descripcion, $fecha_evento, $hora_inicio, $hora_fin, $lugar, $color, $departamento_id, $activo];
+        if ($archivo) {
+            $sql .= ", archivo = ?";
+            $params[] = $archivo;
+        }
+        $sql .= " WHERE id = ?";
+        $params[] = $_POST['id'];
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
         setFlashMessage('Evento actualizado correctamente', 'success');
     }
     header('Location: eventos.php');
     exit;
 }
 
-// Eliminar
 if ($action === 'delete' && $id) {
     $pdo->prepare("DELETE FROM eventos WHERE id = ?")->execute([$id]);
     setFlashMessage('Evento eliminado correctamente', 'success');
@@ -49,7 +70,7 @@ if ($action === 'edit' && $id) {
     $editData = $stmt->fetch();
 }
 
-$eventos = $pdo->query("SELECT * FROM eventos ORDER BY fecha_evento DESC")->fetchAll();
+$eventos = $pdo->query("SELECT e.*, d.nombre as dept_nombre FROM eventos e LEFT JOIN departamentos d ON e.departamento_id = d.id ORDER BY e.fecha_evento DESC")->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -63,17 +84,10 @@ $eventos = $pdo->query("SELECT * FROM eventos ORDER BY fecha_evento DESC")->fetc
 <body>
     <div class="admin-wrapper">
         <aside class="sidebar">
-            <div class="sidebar-header">
-                <img src="../assets/img/logo.png" alt="Logo" onerror="this.style.display='none'">
-                <h2>Intranet Admin</h2>
-            </div>
+            <div class="sidebar-header"><h2>Intranet Admin</h2></div>
             <nav class="sidebar-menu">
+                <div class="menu-section"><a href="index.php"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a></div>
                 <div class="menu-section">
-                    <span class="menu-section-title">Principal</span>
-                    <a href="index.php"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
-                </div>
-                <div class="menu-section">
-                    <span class="menu-section-title">Contenido</span>
                     <a href="slider.php"><i class="fas fa-images"></i> <span>Slider Noticias</span></a>
                     <a href="eventos.php" class="active"><i class="fas fa-calendar-alt"></i> <span>Eventos</span></a>
                     <a href="cumpleanos.php"><i class="fas fa-birthday-cake"></i> <span>Cumpleaños</span></a>
@@ -82,7 +96,6 @@ $eventos = $pdo->query("SELECT * FROM eventos ORDER BY fecha_evento DESC")->fetc
                     <a href="articulos.php"><i class="fas fa-newspaper"></i> <span>Artículos</span></a>
                 </div>
                 <div class="menu-section">
-                    <span class="menu-section-title">Configuración</span>
                     <a href="archivos.php"><i class="fas fa-folder"></i> <span>Archivos Depto.</span></a>
                     <a href="portales.php"><i class="fas fa-external-link-alt"></i> <span>Portales Clientes</span></a>
                     <a href="countdown.php"><i class="fas fa-hourglass-half"></i> <span>Cuenta Regresiva</span></a>
@@ -91,47 +104,35 @@ $eventos = $pdo->query("SELECT * FROM eventos ORDER BY fecha_evento DESC")->fetc
                 </div>
             </nav>
         </aside>
-
         <main class="main-content">
             <div class="top-bar">
-                <h1><i class="fas fa-calendar-alt"></i> Eventos del Calendario</h1>
-                <div class="user-menu">
-                    <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Salir</a>
-                </div>
+                <h1><i class="fas fa-calendar-alt"></i> Eventos</h1>
+                <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Salir</a>
             </div>
 
             <?php if ($flash): ?>
-            <div class="alert alert-<?php echo $flash['type']; ?>">
-                <i class="fas fa-<?php echo $flash['type'] === 'success' ? 'check-circle' : 'exclamation-circle'; ?>"></i>
-                <?php echo $flash['message']; ?>
-            </div>
+            <div class="alert alert-<?php echo $flash['type']; ?>"><i class="fas fa-<?php echo $flash['type']==='success'?'check-circle':'exclamation-circle'; ?>"></i> <?php echo $flash['message']; ?></div>
             <?php endif; ?>
 
             <?php if ($action === 'add' || $action === 'edit'): ?>
             <div class="content-card">
                 <div class="card-header">
-                    <h2><i class="fas fa-<?php echo $action === 'add' ? 'plus' : 'edit'; ?>"></i> 
-                        <?php echo $action === 'add' ? 'Agregar Evento' : 'Editar Evento'; ?>
-                    </h2>
+                    <h2><?php echo $action === 'add' ? 'Agregar Evento' : 'Editar Evento'; ?></h2>
                     <a href="eventos.php" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Volver</a>
                 </div>
                 <div class="card-body">
-                    <form method="POST">
+                    <form method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="form_action" value="<?php echo $action; ?>">
-                        <?php if ($editData): ?>
-                        <input type="hidden" name="id" value="<?php echo $editData['id']; ?>">
-                        <?php endif; ?>
+                        <?php if ($editData): ?><input type="hidden" name="id" value="<?php echo $editData['id']; ?>"><?php endif; ?>
                         
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Título *</label>
-                                <input type="text" name="titulo" class="form-control" required
-                                       value="<?php echo htmlspecialchars($editData['titulo'] ?? ''); ?>">
+                                <input type="text" name="titulo" class="form-control" required value="<?php echo htmlspecialchars($editData['titulo'] ?? ''); ?>">
                             </div>
                             <div class="form-group">
-                                <label>Fecha del Evento *</label>
-                                <input type="date" name="fecha_evento" class="form-control" required
-                                       value="<?php echo $editData['fecha_evento'] ?? ''; ?>">
+                                <label>Fecha *</label>
+                                <input type="date" name="fecha_evento" class="form-control" required value="<?php echo $editData['fecha_evento'] ?? ''; ?>">
                             </div>
                         </div>
                         
@@ -143,38 +144,52 @@ $eventos = $pdo->query("SELECT * FROM eventos ORDER BY fecha_evento DESC")->fetc
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Hora Inicio</label>
-                                <input type="time" name="hora_inicio" class="form-control"
-                                       value="<?php echo $editData['hora_inicio'] ?? ''; ?>">
+                                <input type="time" name="hora_inicio" class="form-control" value="<?php echo $editData['hora_inicio'] ?? ''; ?>">
                             </div>
                             <div class="form-group">
                                 <label>Hora Fin</label>
-                                <input type="time" name="hora_fin" class="form-control"
-                                       value="<?php echo $editData['hora_fin'] ?? ''; ?>">
+                                <input type="time" name="hora_fin" class="form-control" value="<?php echo $editData['hora_fin'] ?? ''; ?>">
                             </div>
                         </div>
                         
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Lugar</label>
-                                <input type="text" name="lugar" class="form-control"
-                                       value="<?php echo htmlspecialchars($editData['lugar'] ?? ''); ?>">
+                                <input type="text" name="lugar" class="form-control" value="<?php echo htmlspecialchars($editData['lugar'] ?? ''); ?>">
                             </div>
+                            <div class="form-group">
+                                <label>Departamento</label>
+                                <select name="departamento_id" class="form-control">
+                                    <option value="">General (sin departamento)</option>
+                                    <?php foreach ($departamentos as $dept): ?>
+                                    <option value="<?php echo $dept['id']; ?>" <?php echo ($editData['departamento_id'] ?? '') == $dept['id'] ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($dept['nombre']); ?>
+                                    </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
                             <div class="form-group">
                                 <label>Color</label>
                                 <input type="color" name="color" value="<?php echo $editData['color'] ?? '#1976D2'; ?>">
+                                <small style="color:#999;">Se usa el color del departamento si se selecciona uno</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Archivo adjunto (Word, Excel, PowerPoint, PDF)</label>
+                                <input type="file" name="archivo" accept=".doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf">
+                                <?php if ($editData && !empty($editData['archivo'])): ?>
+                                <p style="margin-top:8px;color:#666;"><i class="fas fa-paperclip"></i> Archivo actual: <?php echo $editData['archivo']; ?></p>
+                                <?php endif; ?>
                             </div>
                         </div>
                         
                         <div class="form-group">
-                            <label>
-                                <input type="checkbox" name="activo" <?php echo ($editData['activo'] ?? 1) ? 'checked' : ''; ?>>
-                                Activo
-                            </label>
+                            <label><input type="checkbox" name="activo" <?php echo ($editData['activo'] ?? 1) ? 'checked' : ''; ?>> Activo</label>
                         </div>
                         
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Guardar
-                        </button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar</button>
                     </form>
                 </div>
             </div>
@@ -188,34 +203,20 @@ $eventos = $pdo->query("SELECT * FROM eventos ORDER BY fecha_evento DESC")->fetc
                     <div class="table-responsive">
                         <table class="data-table">
                             <thead>
-                                <tr>
-                                    <th>Color</th>
-                                    <th>Título</th>
-                                    <th>Fecha</th>
-                                    <th>Hora</th>
-                                    <th>Lugar</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
+                                <tr><th>Color</th><th>Título</th><th>Fecha</th><th>Departamento</th><th>Archivo</th><th>Estado</th><th>Acciones</th></tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($eventos as $evento): ?>
+                                <?php foreach ($eventos as $ev): ?>
                                 <tr>
-                                    <td><span style="display: inline-block; width: 20px; height: 20px; background: <?php echo $evento['color']; ?>; border-radius: 4px;"></span></td>
-                                    <td><?php echo htmlspecialchars($evento['titulo']); ?></td>
-                                    <td><?php echo formatearFecha($evento['fecha_evento']); ?></td>
-                                    <td><?php echo $evento['hora_inicio'] ? date('H:i', strtotime($evento['hora_inicio'])) : '-'; ?></td>
-                                    <td><?php echo htmlspecialchars($evento['lugar'] ?: '-'); ?></td>
-                                    <td><span class="badge badge-<?php echo $evento['activo'] ? 'active' : 'inactive'; ?>">
-                                        <?php echo $evento['activo'] ? 'Activo' : 'Inactivo'; ?>
-                                    </span></td>
+                                    <td><span style="display:inline-block;width:20px;height:20px;background:<?php echo $ev['color']; ?>;border-radius:4px;"></span></td>
+                                    <td><?php echo htmlspecialchars($ev['titulo']); ?></td>
+                                    <td><?php echo formatearFecha($ev['fecha_evento']); ?></td>
+                                    <td><?php echo htmlspecialchars($ev['dept_nombre'] ?? 'General'); ?></td>
+                                    <td><?php echo !empty($ev['archivo']) ? '<i class="fas fa-paperclip" style="color:#1976d2;"></i>' : '-'; ?></td>
+                                    <td><span class="badge badge-<?php echo $ev['activo'] ? 'active' : 'inactive'; ?>"><?php echo $ev['activo'] ? 'Activo' : 'Inactivo'; ?></span></td>
                                     <td class="actions">
-                                        <a href="eventos.php?action=edit&id=<?php echo $evento['id']; ?>" class="btn-edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button onclick="if(confirmDelete()) location.href='eventos.php?action=delete&id=<?php echo $evento['id']; ?>'" class="btn-delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                        <a href="eventos.php?action=edit&id=<?php echo $ev['id']; ?>" class="btn-edit"><i class="fas fa-edit"></i></a>
+                                        <button onclick="if(confirmDelete()) location.href='eventos.php?action=delete&id=<?php echo $ev['id']; ?>'" class="btn-delete"><i class="fas fa-trash"></i></button>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
