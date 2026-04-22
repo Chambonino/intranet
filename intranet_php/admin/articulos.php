@@ -67,6 +67,7 @@ $articulos = $pdo->query("SELECT * FROM articulos ORDER BY fecha_publicacion DES
     <title>Artículos - Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 </head>
 <body>
     <div class="admin-wrapper">
@@ -128,10 +129,11 @@ $articulos = $pdo->query("SELECT * FROM articulos ORDER BY fecha_publicacion DES
                         
                         <div class="form-group">
                             <label>Contenido *</label>
-                            <textarea name="contenido" class="form-control" rows="10" required><?php echo htmlspecialchars($editData['contenido'] ?? ''); ?></textarea>
+                            <textarea name="contenido" class="form-control" id="wysiwyg" rows="10" required><?php echo htmlspecialchars($editData['contenido'] ?? ''); ?></textarea>
                         </div>
                         
                         <div class="form-group">
+                    <script>tinymce.init({selector:'#wysiwyg',height:300,menubar:false,plugins:'lists link image table',toolbar:'bold italic underline | bullist numlist | link image table | removeformat'});</script>
                             <label>Imagen de portada</label>
                             <input type="file" name="imagen" accept="image/*" onchange="previewImage(this, 'preview')">
                             <?php if ($editData && $editData['imagen']): ?>

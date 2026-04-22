@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $departamento_id = $_POST['departamento_id'] ?: null;
     $puesto = sanitize($_POST['puesto']);
     $fecha_nacimiento = $_POST['fecha_nacimiento'];
+    $fecha_ingreso = $_POST['fecha_ingreso'] ?: null;
     $activo = isset($_POST['activo']) ? 1 : 0;
     
     $foto = null;
@@ -32,13 +33,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     if ($_POST['form_action'] === 'add') {
-        $stmt = $pdo->prepare("INSERT INTO empleados_cumpleanos (nombre_completo, foto, departamento_id, puesto, fecha_nacimiento, activo) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$nombre_completo, $foto, $departamento_id, $puesto, $fecha_nacimiento, $activo]);
+        $stmt = $pdo->prepare("INSERT INTO empleados_cumpleanos (nombre_completo, foto, departamento_id, puesto, fecha_nacimiento, fecha_ingreso, activo) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$nombre_completo, $foto, $departamento_id, $puesto, $fecha_nacimiento, $fecha_ingreso, $activo]);
         setFlashMessage('Empleado agregado correctamente', 'success');
     } elseif ($_POST['form_action'] === 'edit') {
         $update_foto = $foto ? ", foto = '$foto'" : "";
-        $stmt = $pdo->prepare("UPDATE empleados_cumpleanos SET nombre_completo = ?, departamento_id = ?, puesto = ?, fecha_nacimiento = ?, activo = ? $update_foto WHERE id = ?");
-        $stmt->execute([$nombre_completo, $departamento_id, $puesto, $fecha_nacimiento, $activo, $_POST['id']]);
+        $stmt = $pdo->prepare("UPDATE empleados_cumpleanos SET nombre_completo = ?, departamento_id = ?, puesto = ?, fecha_nacimiento = ?, fecha_ingreso = ?, activo = ? $update_foto WHERE id = ?");
+        $stmt->execute([$nombre_completo, $departamento_id, $puesto, $fecha_nacimiento, $fecha_ingreso, $activo, $_POST['id']]);
         setFlashMessage('Empleado actualizado correctamente', 'success');
     }
     header('Location: cumpleanos.php');
@@ -145,6 +146,11 @@ $empleados = $pdo->query("SELECT e.*, d.nombre as departamento_nombre FROM emple
                         </div>
                         
                         <div class="form-row">
+                            <div class="form-group">
+                                <label>Fecha de Ingreso (para aniversarios)</label>
+                                <input type="date" name="fecha_ingreso" class="form-control"
+                                       value="<?php echo $editData['fecha_ingreso'] ?? ''; ?>">
+                            </div>
                             <div class="form-group">
                                 <label>Departamento</label>
                                 <select name="departamento_id" class="form-control">

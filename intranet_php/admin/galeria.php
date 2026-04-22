@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $titulo = sanitize($_POST['titulo']);
     $descripcion = sanitize($_POST['descripcion']);
     $orden = (int)$_POST['orden'];
+    $departamento_id = $_POST['departamento_id'] ?: null;
     $activo = isset($_POST['activo']) ? 1 : 0;
     
     $imagen = null;
@@ -32,14 +33,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$imagen) {
             setFlashMessage('Debe seleccionar una imagen', 'danger');
         } else {
-            $stmt = $pdo->prepare("INSERT INTO galeria_fotos (titulo, descripcion, imagen, orden, activo) VALUES (?, ?, ?, ?, ?)");
-            $stmt->execute([$titulo, $descripcion, $imagen, $orden, $activo]);
+            $stmt = $pdo->prepare("INSERT INTO galeria_fotos (titulo, descripcion, imagen, orden, departamento_id, activo) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$titulo, $descripcion, $imagen, $orden, $departamento_id, $activo]);
             setFlashMessage('Foto agregada correctamente', 'success');
         }
     } elseif ($_POST['form_action'] === 'edit') {
         $update_imagen = $imagen ? ", imagen = '$imagen'" : "";
-        $stmt = $pdo->prepare("UPDATE galeria_fotos SET titulo = ?, descripcion = ?, orden = ?, activo = ? $update_imagen WHERE id = ?");
-        $stmt->execute([$titulo, $descripcion, $orden, $activo, $_POST['id']]);
+        $stmt = $pdo->prepare("UPDATE galeria_fotos SET titulo = ?, descripcion = ?, orden = ?, departamento_id = ?, activo = ? $update_imagen WHERE id = ?");
+        $stmt->execute([$titulo, $descripcion, $orden, $departamento_id, $activo, $_POST['id']]);
         setFlashMessage('Foto actualizada correctamente', 'success');
     }
     header('Location: galeria.php');
@@ -127,6 +128,15 @@ $fotos = $pdo->query("SELECT * FROM galeria_fotos ORDER BY orden ASC, id DESC")-
                                 <label>Orden</label>
                                 <input type="number" name="orden" class="form-control" min="0" value="<?php echo $editData['orden'] ?? 0; ?>">
                             </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Departamento</label>
+                            <select name="departamento_id" class="form-control">
+                                <option value="">General</option>
+                                <?php $depts = getDepartamentos($pdo); foreach ($depts as $d): ?>
+                                <option value="<?php echo $d['id']; ?>" <?php echo ($editData['departamento_id'] ?? '') == $d['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($d['nombre']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         
                         <div class="form-group">
