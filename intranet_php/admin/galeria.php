@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $descripcion = sanitize($_POST['descripcion']);
     $orden = (int)$_POST['orden'];
     $departamento_id = $_POST['departamento_id'] ?: null;
+    $tipo_evento = sanitize($_POST['tipo_evento'] ?? '');
     $activo = isset($_POST['activo']) ? 1 : 0;
     
     $imagen = null;
@@ -33,14 +34,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$imagen) {
             setFlashMessage('Debe seleccionar una imagen', 'danger');
         } else {
-            $stmt = $pdo->prepare("INSERT INTO galeria_fotos (titulo, descripcion, imagen, orden, departamento_id, activo) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$titulo, $descripcion, $imagen, $orden, $departamento_id, $activo]);
+            $stmt = $pdo->prepare("INSERT INTO galeria_fotos (titulo, descripcion, imagen, orden, departamento_id, tipo_evento, activo) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$titulo, $descripcion, $imagen, $orden, $departamento_id, $tipo_evento, $activo]);
             setFlashMessage('Foto agregada correctamente', 'success');
         }
     } elseif ($_POST['form_action'] === 'edit') {
         $update_imagen = $imagen ? ", imagen = '$imagen'" : "";
-        $stmt = $pdo->prepare("UPDATE galeria_fotos SET titulo = ?, descripcion = ?, orden = ?, departamento_id = ?, activo = ? $update_imagen WHERE id = ?");
-        $stmt->execute([$titulo, $descripcion, $orden, $departamento_id, $activo, $_POST['id']]);
+        $stmt = $pdo->prepare("UPDATE galeria_fotos SET titulo = ?, descripcion = ?, orden = ?, departamento_id = ?, tipo_evento = ?, activo = ? $update_imagen WHERE id = ?");
+        $stmt->execute([$titulo, $descripcion, $orden, $departamento_id, $tipo_evento, $activo, $_POST['id']]);
         setFlashMessage('Foto actualizada correctamente', 'success');
     }
     header('Location: galeria.php');
@@ -137,6 +138,10 @@ $fotos = $pdo->query("SELECT * FROM galeria_fotos ORDER BY orden ASC, id DESC")-
                                 <option value="<?php echo $d['id']; ?>" <?php echo ($editData['departamento_id'] ?? '') == $d['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($d['nombre']); ?></option>
                                 <?php endforeach; ?>
                             </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de Evento</label>
+                            <input type="text" name="tipo_evento" class="form-control" placeholder="Ej: Capacitación, Fiesta, Reunión..." value="<?php echo htmlspecialchars($editData['tipo_evento'] ?? ''); ?>">
                         </div>
                         
                         <div class="form-group">

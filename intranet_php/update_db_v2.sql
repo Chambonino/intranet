@@ -21,5 +21,6 @@ CREATE TABLE IF NOT EXISTS kpis_departamento (
 ALTER TABLE galeria_fotos ADD COLUMN departamento_id INT DEFAULT NULL AFTER descripcion;
 ALTER TABLE galeria_fotos ADD FOREIGN KEY (departamento_id) REFERENCES departamentos(id) ON DELETE SET NULL;
 
--- Política PDF en info compañía
+-- Tipo de evento en galería
+ALTER TABLE galeria_fotos ADD COLUMN tipo_evento VARCHAR(100) DEFAULT NULL AFTER departamento_id;
 ALTER TABLE info_compania ADD COLUMN archivo_pdf VARCHAR(255) DEFAULT NULL AFTER contenido;

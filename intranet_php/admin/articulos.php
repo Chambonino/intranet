@@ -67,7 +67,9 @@ $articulos = $pdo->query("SELECT * FROM articulos ORDER BY fecha_publicacion DES
     <title>Artículos - Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
-    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
 </head>
 <body>
     <div class="admin-wrapper">
@@ -131,9 +133,9 @@ $articulos = $pdo->query("SELECT * FROM articulos ORDER BY fecha_publicacion DES
                             <label>Contenido *</label>
                             <textarea name="contenido" class="form-control" id="wysiwyg" rows="10" required><?php echo htmlspecialchars($editData['contenido'] ?? ''); ?></textarea>
                         </div>
+                        <script>$('#wysiwyg').summernote({height:300,toolbar:[['style',['bold','italic','underline']],['para',['ul','ol']],['insert',['link','picture','table']],['view',['codeview']]]});</script>
                         
                         <div class="form-group">
-                    <script>tinymce.init({selector:'#wysiwyg',height:300,menubar:false,plugins:'lists link image table',toolbar:'bold italic underline | bullist numlist | link image table | removeformat'});</script>
                             <label>Imagen de portada</label>
                             <input type="file" name="imagen" accept="image/*" onchange="previewImage(this, 'preview')">
                             <?php if ($editData && $editData['imagen']): ?>

@@ -38,7 +38,9 @@ $secciones = $pdo->query("SELECT * FROM info_compania ORDER BY orden ASC")->fetc
     <title>Nuestra Compañía - Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
-    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
 </head>
 <body>
     <div class="admin-wrapper">
@@ -76,7 +78,7 @@ $secciones = $pdo->query("SELECT * FROM info_compania ORDER BY orden ASC")->fetc
                     <form method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="id" value="<?php echo $sec['id']; ?>">
                         <div class="form-group"><label>Título</label><input type="text" name="titulo" class="form-control" value="<?php echo htmlspecialchars($sec['titulo']); ?>"></div>
-                        <div class="form-group"><label>Contenido</label><textarea name="contenido" class="form-control tinymce-editor" rows="4"><?php echo htmlspecialchars($sec['contenido']); ?></textarea></div>
+                        <div class="form-group"><label>Contenido</label><textarea name="contenido" class="form-control sn-editor" rows="4"><?php echo htmlspecialchars($sec['contenido']); ?></textarea></div>
                         <div class="form-group"><label>Archivo PDF (Política)</label><input type="file" name="archivo_pdf" accept=".pdf">
                             <?php if (!empty($sec['archivo_pdf'])): ?><p style="margin-top:8px;color:#666;"><i class="fas fa-file-pdf" style="color:red;"></i> <?php echo $sec['archivo_pdf']; ?></p><?php endif; ?>
                         </div>
@@ -88,8 +90,7 @@ $secciones = $pdo->query("SELECT * FROM info_compania ORDER BY orden ASC")->fetc
         </main>
     </div>
     <script>
-    tinymce.init({ selector: '.tinymce-editor', height: 200, menubar: false, skin: 'oxide-dark', content_css: 'dark',
-        plugins: 'lists link', toolbar: 'bold italic underline | bullist numlist | link' });
+    $('.sn-editor').summernote({height:150,toolbar:[['style',['bold','italic','underline']],['para',['ul','ol']],['insert',['link']]]});
     </script>
 </body>
 </html>

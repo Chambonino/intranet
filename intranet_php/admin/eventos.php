@@ -80,7 +80,6 @@ $eventos = $pdo->query("SELECT e.*, d.nombre as dept_nombre FROM eventos e LEFT 
     <title>Eventos - Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
-    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 </head>
 <body>
     <div class="admin-wrapper">
@@ -139,8 +138,7 @@ $eventos = $pdo->query("SELECT e.*, d.nombre as dept_nombre FROM eventos e LEFT 
                         
                         <div class="form-group">
                             <label>Descripción</label>
-                            <textarea name="descripcion" class="form-control" id="evDesc" rows="3"><?php echo htmlspecialchars($editData['descripcion'] ?? ''); ?></textarea>
-                            <script>tinymce.init({selector:'#evDesc',height:200,menubar:false,plugins:'lists link',toolbar:'bold italic underline | bullist numlist | link'});</script>
+                            <textarea name="descripcion" class="form-control" rows="4"><?php echo htmlspecialchars($editData['descripcion'] ?? ''); ?></textarea>
                         </div>
                         
                         <div class="form-row">

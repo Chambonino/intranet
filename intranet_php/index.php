@@ -397,6 +397,22 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
     function openAnivCard(name,dept,puesto,foto,anos){let m=document.getElementById('anivM');if(!m){m=document.createElement('div');m.id='anivM';m.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;';m.addEventListener('click',function(e){if(e.target===m)m.style.display='none';});document.body.appendChild(m);}
     m.innerHTML='<div style="background:linear-gradient(135deg,#1a237e,#283593);border-radius:20px;padding:40px;text-align:center;max-width:400px;color:white;position:relative;"><button onclick="document.getElementById(\'anivM\').style.display=\'none\'" style="position:absolute;top:10px;right:15px;background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;"><i class="fas fa-times"></i></button><div style="font-size:3rem;margin-bottom:15px;">&#127942;</div><img src="'+foto+'" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:4px solid gold;margin-bottom:15px;" onerror="this.src=\'assets/img/default-avatar.svg\'"><h2 style="margin-bottom:5px;">'+name+'</h2><p style="opacity:0.9;">'+puesto+'</p><p style="opacity:0.8;font-size:0.9rem;">'+dept+'</p><div style="font-size:2.5rem;font-weight:800;margin:15px 0;color:gold;">'+anos+' A\u00f1o'+(anos!=1?'s':'')+'</div><div style="padding:15px;background:rgba(255,255,255,0.2);border-radius:10px;font-style:italic;">\u00a1Felicidades '+name.split(' ')[0]+' por tu aniversario en la empresa!</div></div>';m.style.display='flex';}
 
+    // AUTO-SLIDER para galerías y videos
+    function autoSlide(trackId, intervalMs) {
+        const track = document.getElementById(trackId);
+        if (!track || !track.firstElementChild) return;
+        if (!tp[trackId]) tp[trackId] = 0;
+        const itemW = track.firstElementChild.offsetWidth + 15;
+        const maxScroll = -(track.scrollWidth - track.parentElement.offsetWidth + 40);
+        setInterval(() => {
+            tp[trackId] -= itemW;
+            if (tp[trackId] < maxScroll) tp[trackId] = 0;
+            track.style.transform = 'translateX(' + tp[trackId] + 'px)';
+        }, intervalMs);
+    }
+    autoSlide('galleryTrack', 3000);
+    autoSlide('videoTrack', 4000);
+
     document.addEventListener('keydown',function(e){if(e.key==='Escape'){['imgM','vidM','bdM','anivM'].forEach(id=>{const m=document.getElementById(id);if(m)m.style.display='none';});closeVM();}});
     </script>
 </body>
