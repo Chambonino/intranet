@@ -311,12 +311,13 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                     <p class="company-desc">Empresa automotriz dedicada a la inyecci&oacute;n, cromado y pintura de piezas pl&aacute;sticas automotrices.</p>
                     <?php $iconos=['mision'=>'fa-bullseye','vision'=>'fa-eye','valores'=>'fa-heart']; $colores=['mision'=>'#E53935','vision'=>'#43A047','valores'=>'#FF9800'];
                     foreach ($infoCompania as $info): ?>
-                    <div class="company-value">
+                    <a href="compania_detalle.php?s=<?php echo $info['seccion']; ?>" style="text-decoration:none;color:inherit;display:block;" class="company-value">
                         <div class="company-value-header"><i class="fas <?php echo $iconos[$info['seccion']] ?? 'fa-info-circle'; ?>" style="color:<?php echo $colores[$info['seccion']] ?? '#1976D2'; ?>;"></i><span style="color:<?php echo $colores[$info['seccion']] ?? '#1976D2'; ?>;"><?php echo strtoupper($info['seccion']); ?></span>
-                        <?php if (!empty($info['archivo_pdf'])): ?><a href="assets/uploads/company/<?php echo $info['archivo_pdf']; ?>" target="_blank" style="margin-left:auto;font-size:0.7rem;color:var(--accent-blue);text-decoration:none;"><i class="fas fa-file-pdf"></i> Ver PDF</a><?php endif; ?>
+                        <?php if (!empty($info['archivo_pdf'])): ?><span style="margin-left:auto;font-size:0.7rem;color:var(--accent-blue);"><i class="fas fa-file-pdf"></i> PDF</span><?php endif; ?>
+                        <i class="fas fa-chevron-right" style="margin-left:auto;font-size:0.7rem;color:var(--text-muted);"></i>
                         </div>
-                        <p><?php echo $info['contenido']; ?></p>
-                    </div>
+                        <p><?php echo truncarTexto(strip_tags($info['contenido']), 150); ?></p>
+                    </a>
                     <?php endforeach; ?>
                 </div>
             </div>
@@ -412,6 +413,8 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
     }
     autoSlide('galleryTrack', 3000);
     autoSlide('videoTrack', 4000);
+    autoSlide('bdTrack', 3500);
+    autoSlide('anivTrack', 4000);
 
     document.addEventListener('keydown',function(e){if(e.key==='Escape'){['imgM','vidM','bdM','anivM'].forEach(id=>{const m=document.getElementById(id);if(m)m.style.display='none';});closeVM();}});
     </script>
