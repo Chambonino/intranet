@@ -133,7 +133,7 @@ $articulos = $pdo->query("SELECT * FROM articulos ORDER BY fecha_publicacion DES
                             <label>Contenido *</label>
                             <textarea name="contenido" class="form-control" id="wysiwyg" rows="10" required><?php echo htmlspecialchars($editData['contenido'] ?? ''); ?></textarea>
                         </div>
-                        <script>$('#wysiwyg').summernote({height:300,toolbar:[['style',['bold','italic','underline']],['para',['ul','ol']],['insert',['link','picture','table']],['view',['codeview']]]});</script>
+                        <script>$('#wysiwyg').summernote({height:300,toolbar:[['style',['bold','italic','underline','strikethrough']],['font',['superscript','subscript']],['para',['ul','ol','paragraph']],['insert',['link','picture','table','hr']],['view',['fullscreen','codeview']]],callbacks:{onImageUpload:function(files){var data=new FormData();data.append('file',files[0]);$.ajax({url:'../api/upload_image.php',method:'POST',data:data,processData:false,contentType:false,success:function(r){var res=typeof r==='string'?JSON.parse(r):r;if(res.url){$('#wysiwyg').summernote('insertImage',res.url);}else{alert(res.error||'Error al subir');}}}); }}});</script>
                         
                         <div class="form-group">
                             <label>Imagen de portada</label>

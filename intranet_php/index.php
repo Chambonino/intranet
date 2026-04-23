@@ -125,18 +125,21 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
         </div>
     </header>
 
-    <!-- AVISOS outline -->
+    <!-- AVISOS con fade automático -->
     <?php if (count($avisos) > 0): ?>
     <div style="max-width:1200px;margin:0 auto;padding:8px 40px 0;">
-        <?php foreach ($avisos as $aviso): ?>
-        <div class="aviso-outline <?php echo $aviso['tipo']; ?>">
-            <i class="fas fa-bullhorn"></i>
-            <div style="flex:1;">
-                <strong><?php echo htmlspecialchars($aviso['titulo']); ?></strong>
-                <?php if ($aviso['contenido']): ?><p style="font-size:0.8rem;margin-top:2px;"><?php echo htmlspecialchars($aviso['contenido']); ?></p><?php endif; ?>
+        <div style="position:relative;min-height:50px;">
+            <?php foreach ($avisos as $i => $aviso):
+                $tipoColors = ['info'=>'#1976D2','warning'=>'#FF9800','danger'=>'#E53935','success'=>'#43A047'];
+                $tipoColor = $tipoColors[$aviso['tipo']] ?? '#1976D2';
+            ?>
+            <div class="aviso-fade-item" style="<?php echo $i > 0 ? 'opacity:0;position:absolute;top:0;left:0;right:0;' : 'opacity:1;'; ?>transition:opacity 0.8s ease;border:2px solid <?php echo $tipoColor; ?>;border-radius:8px;padding:10px 18px;display:flex;align-items:center;gap:12px;background:transparent;color:<?php echo $tipoColor; ?>;">
+                <i class="fas fa-bullhorn"></i>
+                <div style="flex:1;"><strong style="color:var(--text-primary);"><?php echo htmlspecialchars($aviso['titulo']); ?></strong>
+                <?php if ($aviso['contenido']): ?><p style="font-size:0.8rem;margin-top:2px;color:var(--text-secondary);"><?php echo htmlspecialchars($aviso['contenido']); ?></p><?php endif; ?></div>
             </div>
+            <?php endforeach; ?>
         </div>
-        <?php endforeach; ?>
     </div>
     <?php endif; ?>
 
@@ -200,9 +203,11 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 <div class="section-header"><i class="fas fa-birthday-cake"></i> Cumplea&ntilde;os</div>
                 <div style="position:relative;overflow:hidden;padding:15px 20px 20px;">
                     <div id="bdTrack" style="display:flex;gap:15px;transition:transform 0.5s;"><?php if (count($allBirthdays) > 0): foreach ($allBirthdays as $c): ?>
-                    <div style="min-width:200px;background:var(--bg-input);border-radius:10px;padding:15px;flex-shrink:0;cursor:pointer;" onclick="openBirthdayCard('<?php echo htmlspecialchars($c['nombre_completo'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($c['departamento_nombre'] ?? '', ENT_QUOTES); ?>','<?php echo htmlspecialchars($c['puesto'] ?? '', ENT_QUOTES); ?>','assets/uploads/employees/<?php echo $c['foto'] ?: 'default.png'; ?>')">
-                        <div style="display:flex;align-items:center;gap:10px;"><img src="assets/uploads/employees/<?php echo $c['foto'] ?: 'default.png'; ?>" style="width:45px;height:45px;border-radius:50%;object-fit:cover;border:2px solid var(--accent-purple);" onerror="this.src='assets/img/default-avatar.svg'"><div><div style="font-size:0.85rem;font-weight:600;"><?php echo htmlspecialchars($c['nombre_completo']); ?></div><div style="font-size:0.7rem;color:var(--text-muted);"><?php echo htmlspecialchars($c['departamento_nombre'] ?? ''); ?></div></div></div>
-                        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:8px;"><?php echo date('d', strtotime($c['fecha_nacimiento'])); ?> de este mes</div>
+                    <div style="min-width:220px;background:linear-gradient(135deg,#e65100,#ff9800);border-radius:12px;padding:18px;flex-shrink:0;text-align:center;color:white;cursor:pointer;transition:transform 0.3s;" onclick="openBirthdayCard('<?php echo htmlspecialchars($c['nombre_completo'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($c['departamento_nombre'] ?? '', ENT_QUOTES); ?>','<?php echo htmlspecialchars($c['puesto'] ?? '', ENT_QUOTES); ?>','assets/uploads/employees/<?php echo $c['foto'] ?: 'default.png'; ?>')" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="assets/uploads/employees/<?php echo $c['foto'] ?: 'default.png'; ?>" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid white;margin-bottom:10px;" onerror="this.src='assets/img/default-avatar.svg'">
+                        <div style="font-weight:600;"><?php echo htmlspecialchars($c['nombre_completo']); ?></div>
+                        <div style="font-size:0.75rem;opacity:0.9;"><?php echo htmlspecialchars($c['departamento_nombre'] ?? ''); ?></div>
+                        <div style="font-size:0.7rem;opacity:0.8;margin-top:5px;"><?php echo date('d', strtotime($c['fecha_nacimiento'])); ?> de este mes</div>
                     </div>
                     <?php endforeach; else: ?><p style="color:var(--text-muted);font-size:0.85rem;">Sin cumplea&ntilde;os</p><?php endif; ?></div>
                     <?php if (count($allBirthdays) > 2): ?><button onclick="slideTrack('bdTrack',-1)" style="position:absolute;left:5px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.7);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;z-index:5;"><i class="fas fa-chevron-left"></i></button><button onclick="slideTrack('bdTrack',1)" style="position:absolute;right:5px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.7);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;z-index:5;"><i class="fas fa-chevron-right"></i></button><?php endif; ?>
@@ -332,7 +337,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
             </div>
         </div>
 
-        <!-- ROW 8: Conversor de divisas + Traductor -->
+        <!-- ROW 8: Conversor de divisas + KPIs paginados por departamento -->
         <div class="grid-2-col">
             <div class="section-card">
                 <div class="section-header"><i class="fas fa-exchange-alt"></i> Conversor de Divisas</div>
@@ -347,10 +352,26 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 </div>
             </div>
             <div class="section-card">
-                <div class="section-header"><i class="fas fa-language"></i> Traductor</div>
-                <div style="padding:20px;">
-                    <div id="google_translate_element"></div>
-                    <p style="font-size:0.75rem;color:var(--text-muted);margin-top:10px;">Traduce esta p&aacute;gina a cualquier idioma usando Google Translate</p>
+                <div class="section-header"><i class="fas fa-chart-line"></i> Indicadores KPI's por Departamento</div>
+                <div style="padding:15px 20px 20px;max-height:350px;overflow-y:auto;">
+                    <?php if (count($kpis) > 0):
+                        $currentDept = '';
+                        foreach ($kpis as $k):
+                            $ext = strtolower(pathinfo($k['archivo'], PATHINFO_EXTENSION));
+                            if ($k['dept_nombre'] !== $currentDept):
+                                $currentDept = $k['dept_nombre'];
+                    ?>
+                    <div style="font-size:0.75rem;font-weight:700;color:var(--accent-blue);text-transform:uppercase;letter-spacing:1px;margin:12px 0 8px;padding-top:8px;border-top:1px solid var(--border-color);"><?php echo htmlspecialchars($currentDept ?? 'General'); ?></div>
+                    <?php endif; ?>
+                    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg-input);border-radius:8px;margin-bottom:6px;">
+                        <div style="width:30px;height:30px;background:<?php echo $ext === 'pdf' ? 'var(--accent-red)' : 'var(--accent-green)'; ?>;border-radius:6px;display:flex;align-items:center;justify-content:center;color:white;font-size:0.75rem;flex-shrink:0;"><i class="fas fa-file"></i></div>
+                        <div style="flex:1;min-width:0;"><div style="font-size:0.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($k['nombre']); ?></div><div style="font-size:0.6rem;color:var(--text-muted);"><?php echo strtoupper($ext); ?></div></div>
+                        <a href="assets/uploads/kpis/<?php echo $k['archivo']; ?>" target="_blank" style="color:var(--text-muted);font-size:0.8rem;" title="Ver"><i class="fas fa-external-link-alt"></i></a>
+                        <a href="assets/uploads/kpis/<?php echo $k['archivo']; ?>" download style="color:var(--text-muted);font-size:0.8rem;" title="Descargar"><i class="fas fa-download"></i></a>
+                    </div>
+                    <?php endforeach; else: ?>
+                    <p style="color:var(--text-muted);font-size:0.85rem;">Sin KPIs registrados</p>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -358,10 +379,6 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
     </main>
 
     <footer class="footer"><p>&copy; <?php echo date('Y'); ?> Automotriz Corp. | <a href="admin/login.php" style="color:var(--text-muted);text-decoration:none;">Administraci&oacute;n</a></p></footer>
-
-    <!-- Google Translate -->
-    <script>function googleTranslateElementInit(){new google.translate.TranslateElement({pageLanguage:'es',layout:google.translate.TranslateElement.InlineLayout.SIMPLE},'google_translate_element');}</script>
-    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
     <script>
     // SLIDER
@@ -415,6 +432,20 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
     autoSlide('videoTrack', 4000);
     autoSlide('bdTrack', 3500);
     autoSlide('anivTrack', 4000);
+
+    // AVISOS FADE
+    (function(){
+        const items = document.querySelectorAll('.aviso-fade-item');
+        if (items.length <= 1) return;
+        let cur = 0;
+        setInterval(() => {
+            items[cur].style.opacity = '0';
+            items[cur].style.position = 'absolute';
+            cur = (cur + 1) % items.length;
+            items[cur].style.position = 'relative';
+            items[cur].style.opacity = '1';
+        }, 4000);
+    })();
 
     document.addEventListener('keydown',function(e){if(e.key==='Escape'){['imgM','vidM','bdM','anivM'].forEach(id=>{const m=document.getElementById(id);if(m)m.style.display='none';});closeVM();}});
     </script>
