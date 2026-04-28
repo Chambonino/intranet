@@ -131,7 +131,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
             </div>
         </div>
     </header>
-    <div style="height:90px;"></div>
+    <div style="height:100px;"></div>
 
     <!-- AVISOS con fade automático -->
     <?php if (count($avisos) > 0): ?>
@@ -187,12 +187,12 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 <!-- Apps -->
                 <div class="section-card" style="margin-bottom:20px;">
                     <div class="section-header"><i class="fas fa-th"></i> Aplicaciones R&aacute;pidas</div>
-                    <div class="apps-grid"><?php foreach ($aplicaciones as $app): ?>
-                        <?php if ($app['url'] === 'http://192.168.1.2/a' && $organigrama): ?>
-                        <a href="javascript:void(0)" onclick="openImageModal('assets/uploads/company/<?php echo $organigrama['imagen']; ?>','Organigrama Corporativo')" class="app-card" style="background:<?php echo $app['color']; ?>;"><i class="fas <?php echo $app['icono']; ?>"></i><span><?php echo htmlspecialchars($app['nombre']); ?></span></a>
-                        <?php else: ?>
-                        <a href="<?php echo htmlspecialchars($app['url']); ?>" target="_blank" class="app-card" style="background:<?php echo $app['color']; ?>;"><i class="fas <?php echo $app['icono']; ?>"></i><span><?php echo htmlspecialchars($app['nombre']); ?></span></a>
+                    <div class="apps-grid">
+                        <?php if ($organigrama): ?>
+                        <a href="javascript:void(0)" onclick="openImageModal('assets/uploads/company/<?php echo $organigrama['imagen']; ?>','Organigrama Corporativo')" class="app-card" style="background:#E53935;"><i class="fas fa-sitemap"></i><span>Organigrama</span></a>
                         <?php endif; ?>
+                        <?php foreach ($aplicaciones as $app): ?>
+                        <a href="<?php echo htmlspecialchars($app['url']); ?>" target="_blank" class="app-card" style="background:<?php echo $app['color']; ?>;"><i class="fas <?php echo $app['icono']; ?>"></i><span><?php echo htmlspecialchars($app['nombre']); ?></span></a>
                     <?php endforeach; ?></div>
                 </div>
                 <!-- Countdown con efecto -->
@@ -245,7 +245,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
 
         <!-- ROW 3: Noticias paginadas -->
         <div class="section-card" style="margin-bottom:25px;">
-            <div class="section-header" style="padding:18px 20px;"><i class="fas fa-newspaper"></i> Noticias y Art&iacute;culos</div>
+            <div class="section-header" style="padding:18px 20px;justify-content:space-between;"><span><i class="fas fa-newspaper"></i> Noticias y Art&iacute;culos</span><a href="noticias.php" style="font-size:0.75rem;color:var(--accent-blue);text-decoration:none;">Ver todas <i class="fas fa-arrow-right"></i></a></div>
             <div style="padding:15px 20px 20px;">
                 <?php if (count($articulosPage) > 0): ?>
                 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:15px;">

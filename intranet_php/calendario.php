@@ -67,10 +67,10 @@ if ($nextMonth > 12) { $nextMonth = 1; $nextYear++; }
         .legend-dot { width: 24px; height: 8px; border-radius: 4px; flex-shrink: 0; }
         .cal-table { background: var(--bg-card); border-radius: 12px; overflow: hidden; }
         .cal-table table { width: 100%; border-collapse: collapse; }
-        .cal-table th { background: var(--bg-input); padding: 12px; text-align: center; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); letter-spacing: 1px; border-bottom: 1px solid var(--border-color); }
+        .cal-table th { background: var(--bg-input); padding: 12px; text-align: center; font-size: 0.85rem; font-weight: 600; color: #ffffff; letter-spacing: 1px; border-bottom: 1px solid var(--border-color); }
         .cal-table td { border: 1px solid var(--border-color); padding: 8px; vertical-align: top; height: 110px; width: 14.28%; }
-        .cal-table td .day-num { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; }
-        .cal-table td.today .day-num { color: var(--accent-blue); font-weight: 700; }
+        .cal-table td .day-num { font-size: 1rem; color: #e0e0e0; margin-bottom: 5px; font-weight: 500; }
+        .cal-table td.today .day-num { color: #42a5f5; font-weight: 700; font-size: 1.1rem; }
         .cal-event-bar { display: block; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; color: white; margin-bottom: 3px; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity 0.3s; }
         .cal-event-bar:hover { opacity: 0.8; }
         .cal-table td.empty { background: rgba(0,0,0,0.2); }
