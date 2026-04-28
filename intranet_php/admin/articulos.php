@@ -133,7 +133,83 @@ $articulos = $pdo->query("SELECT * FROM articulos ORDER BY fecha_publicacion DES
                             <label>Contenido *</label>
                             <textarea name="contenido" class="form-control" id="wysiwyg" rows="10" required><?php echo htmlspecialchars($editData['contenido'] ?? ''); ?></textarea>
                         </div>
-                        <script>$('#wysiwyg').summernote({height:300,toolbar:[['style',['bold','italic','underline','strikethrough']],['font',['superscript','subscript']],['para',['ul','ol','paragraph']],['insert',['link','picture','table','hr']],['view',['fullscreen','codeview']]],callbacks:{onImageUpload:function(files){var data=new FormData();data.append('file',files[0]);$.ajax({url:'../api/upload_image.php',method:'POST',data:data,processData:false,contentType:false,success:function(r){var res=typeof r==='string'?JSON.parse(r):r;if(res.url){$('#wysiwyg').summernote('insertImage',res.url);}else{alert(res.error||'Error al subir');}}}); }}});</script>
+                        <script>
+                        // Botón personalizado para adjuntar archivos
+                        var AttachFileButton = function(context) {
+                            var ui = $.summernote.ui;
+                            var button = ui.button({
+                                contents: '<i class="fas fa-paperclip"></i> Adjuntar',
+                                tooltip: 'Adjuntar archivo (PDF, Excel, PowerPoint)',
+                                click: function() {
+                                    var input = document.createElement('input');
+                                    input.type = 'file';
+                                    input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
+                                    input.onchange = function() {
+                                        if (!input.files[0]) return;
+                                        var data = new FormData();
+                                        data.append('file', input.files[0]);
+                                        var fileName = input.files[0].name;
+                                        $.ajax({
+                                            url: '../api/upload_image.php',
+                                            method: 'POST',
+                                            data: data,
+                                            processData: false,
+                                            contentType: false,
+                                            success: function(r) {
+                                                var res = typeof r === 'string' ? JSON.parse(r) : r;
+                                                if (res.url) {
+                                                    var ext = res.extension.toUpperCase();
+                                                    var icons = {'PDF':'fa-file-pdf','DOC':'fa-file-word','DOCX':'fa-file-word','XLS':'fa-file-excel','XLSX':'fa-file-excel','PPT':'fa-file-powerpoint','PPTX':'fa-file-powerpoint'};
+                                                    var colors = {'PDF':'#E53935','DOC':'#1976D2','DOCX':'#1976D2','XLS':'#43A047','XLSX':'#43A047','PPT':'#FF9800','PPTX':'#FF9800'};
+                                                    var icon = icons[ext] || 'fa-file';
+                                                    var color = colors[ext] || '#666';
+                                                    var html = '<div style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:#f5f5f5;border-radius:8px;border-left:4px solid '+color+';margin:5px 0;">' +
+                                                        '<i class="fas '+icon+'" style="color:'+color+';font-size:1.2rem;"></i>' +
+                                                        '<a href="'+res.url+'" target="_blank" style="color:#333;font-weight:500;text-decoration:none;">'+res.originalName+'</a>' +
+                                                        '<span style="font-size:0.7rem;color:#999;background:#eee;padding:2px 6px;border-radius:4px;">'+ext+'</span>' +
+                                                        '</div><br>';
+                                                    context.invoke('editor.pasteHTML', html);
+                                                } else {
+                                                    alert(res.error || 'Error al subir archivo');
+                                                }
+                                            },
+                                            error: function() { alert('Error de conexión al subir archivo'); }
+                                        });
+                                    };
+                                    input.click();
+                                }
+                            });
+                            return button.render();
+                        };
+
+                        $('#wysiwyg').summernote({
+                            height: 300,
+                            toolbar: [
+                                ['style', ['bold', 'italic', 'underline', 'strikethrough']],
+                                ['font', ['superscript', 'subscript']],
+                                ['para', ['ul', 'ol', 'paragraph']],
+                                ['insert', ['link', 'picture', 'table', 'hr']],
+                                ['custom', ['attachFile']],
+                                ['view', ['fullscreen', 'codeview']]
+                            ],
+                            buttons: { attachFile: AttachFileButton },
+                            callbacks: {
+                                onImageUpload: function(files) {
+                                    var data = new FormData();
+                                    data.append('file', files[0]);
+                                    $.ajax({
+                                        url: '../api/upload_image.php', method: 'POST', data: data,
+                                        processData: false, contentType: false,
+                                        success: function(r) {
+                                            var res = typeof r === 'string' ? JSON.parse(r) : r;
+                                            if (res.url) { $('#wysiwyg').summernote('insertImage', res.url); }
+                                            else { alert(res.error || 'Error al subir'); }
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                        </script>
                         
                         <div class="form-group">
                             <label>Imagen de portada</label>

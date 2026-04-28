@@ -61,8 +61,15 @@ $totalPPages = max(1, ceil($totalP / $pPerPage));
 $stmtP = $pdo->prepare("SELECT * FROM portales_clientes WHERE activo = 1 ORDER BY orden ASC LIMIT ? OFFSET ?");
 $stmtP->execute([$pPerPage, $pOffset]); $portalesPage = $stmtP->fetchAll();
 
-// KPIs
-$kpis = $pdo->query("SELECT k.*, d.nombre as dept_nombre FROM kpis_departamento k LEFT JOIN departamentos d ON k.departamento_id = d.id WHERE k.activo = 1 ORDER BY d.nombre, k.nombre")->fetchAll();
+// KPIs con filtro mes/año
+$kpiMes = $_GET['kpi_mes'] ?? date('m');
+$kpiAnio = $_GET['kpi_anio'] ?? date('Y');
+$stmtKpi = $pdo->prepare("SELECT k.*, d.nombre as dept_nombre FROM kpis_departamento k LEFT JOIN departamentos d ON k.departamento_id = d.id WHERE k.activo = 1 AND k.mes = ? AND k.anio = ? ORDER BY d.nombre, k.nombre");
+$stmtKpi->execute([(int)$kpiMes, (int)$kpiAnio]);
+$kpis = $stmtKpi->fetchAll();
+
+// Organigrama activo
+$organigrama = $pdo->query("SELECT * FROM organigrama WHERE activo = 1 ORDER BY id DESC LIMIT 1")->fetch();
 
 $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',7=>'Julio',8=>'Agosto',9=>'Septiembre',10=>'Octubre',11=>'Noviembre',12=>'Diciembre'];
 ?>
@@ -352,29 +359,53 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 </div>
             </div>
             <div class="section-card">
-                <div class="section-header"><i class="fas fa-chart-line"></i> Indicadores KPI's por Departamento</div>
+                <div class="section-header" style="justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                    <span><i class="fas fa-chart-line"></i> KPI's por Departamento</span>
+                    <form method="GET" style="display:flex;gap:8px;align-items:center;">
+                        <select name="kpi_mes" class="dept-select" style="font-size:0.75rem;" onchange="this.form.submit()">
+                            <?php foreach ($mesesEsp as $num => $nom): ?><option value="<?php echo $num; ?>" <?php echo $kpiMes == $num ? 'selected' : ''; ?>><?php echo $nom; ?></option><?php endforeach; ?>
+                        </select>
+                        <select name="kpi_anio" class="dept-select" style="font-size:0.75rem;" onchange="this.form.submit()">
+                            <?php for ($y = date('Y') + 1; $y >= date('Y') - 3; $y--): ?><option value="<?php echo $y; ?>" <?php echo $kpiAnio == $y ? 'selected' : ''; ?>><?php echo $y; ?></option><?php endfor; ?>
+                        </select>
+                    </form>
+                </div>
                 <div style="padding:15px 20px 20px;max-height:350px;overflow-y:auto;">
                     <?php if (count($kpis) > 0):
                         $currentDept = '';
                         foreach ($kpis as $k):
-                            $ext = strtolower(pathinfo($k['archivo'], PATHINFO_EXTENSION));
                             if ($k['dept_nombre'] !== $currentDept):
                                 $currentDept = $k['dept_nombre'];
                     ?>
                     <div style="font-size:0.75rem;font-weight:700;color:var(--accent-blue);text-transform:uppercase;letter-spacing:1px;margin:12px 0 8px;padding-top:8px;border-top:1px solid var(--border-color);"><?php echo htmlspecialchars($currentDept ?? 'General'); ?></div>
                     <?php endif; ?>
                     <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg-input);border-radius:8px;margin-bottom:6px;">
-                        <div style="width:30px;height:30px;background:<?php echo $ext === 'pdf' ? 'var(--accent-red)' : 'var(--accent-green)'; ?>;border-radius:6px;display:flex;align-items:center;justify-content:center;color:white;font-size:0.75rem;flex-shrink:0;"><i class="fas fa-file"></i></div>
-                        <div style="flex:1;min-width:0;"><div style="font-size:0.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($k['nombre']); ?></div><div style="font-size:0.6rem;color:var(--text-muted);"><?php echo strtoupper($ext); ?></div></div>
-                        <a href="assets/uploads/kpis/<?php echo $k['archivo']; ?>" target="_blank" style="color:var(--text-muted);font-size:0.8rem;" title="Ver"><i class="fas fa-external-link-alt"></i></a>
-                        <a href="assets/uploads/kpis/<?php echo $k['archivo']; ?>" download style="color:var(--text-muted);font-size:0.8rem;" title="Descargar"><i class="fas fa-download"></i></a>
+                        <?php if ($k['imagen']): ?>
+                        <img src="assets/uploads/kpis/<?php echo $k['imagen']; ?>" style="width:40px;height:40px;object-fit:cover;border-radius:6px;cursor:pointer;flex-shrink:0;" onclick="openImageModal('assets/uploads/kpis/<?php echo $k['imagen']; ?>','<?php echo htmlspecialchars($k['nombre'], ENT_QUOTES); ?>')">
+                        <?php else: ?>
+                        <div style="width:40px;height:40px;background:var(--accent-green);border-radius:6px;display:flex;align-items:center;justify-content:center;color:white;font-size:0.75rem;flex-shrink:0;"><i class="fas fa-chart-bar"></i></div>
+                        <?php endif; ?>
+                        <div style="flex:1;min-width:0;"><div style="font-size:0.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($k['nombre']); ?></div><div style="font-size:0.6rem;color:var(--text-muted);"><?php echo $mesesEsp[$k['mes']] ?? ''; ?> <?php echo $k['anio']; ?></div></div>
+                        <?php if ($k['imagen']): ?><span onclick="openImageModal('assets/uploads/kpis/<?php echo $k['imagen']; ?>','<?php echo htmlspecialchars($k['nombre'], ENT_QUOTES); ?>')" style="color:var(--accent-blue);font-size:0.8rem;cursor:pointer;" title="Ver imagen"><i class="fas fa-search-plus"></i></span><?php endif; ?>
+                        <?php if ($k['archivo']): ?><a href="assets/uploads/kpis/<?php echo $k['archivo']; ?>" download style="color:var(--text-muted);font-size:0.8rem;" title="Descargar"><i class="fas fa-download"></i></a><?php endif; ?>
                     </div>
                     <?php endforeach; else: ?>
-                    <p style="color:var(--text-muted);font-size:0.85rem;">Sin KPIs registrados</p>
+                    <p style="color:var(--text-muted);font-size:0.85rem;">Sin KPIs para <?php echo $mesesEsp[(int)$kpiMes]; ?> <?php echo $kpiAnio; ?></p>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
+
+        <!-- ROW 9: Organigrama -->
+        <?php if ($organigrama): ?>
+        <div class="section-card" style="margin-bottom:25px;">
+            <div class="section-header"><i class="fas fa-sitemap"></i> Organigrama Corporativo</div>
+            <div style="padding:20px;text-align:center;">
+                <img src="assets/uploads/company/<?php echo $organigrama['imagen']; ?>" style="max-width:100%;max-height:400px;border-radius:12px;cursor:pointer;transition:transform 0.3s;" onclick="openImageModal('assets/uploads/company/<?php echo $organigrama['imagen']; ?>','<?php echo htmlspecialchars($organigrama['titulo'], ENT_QUOTES); ?>')" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                <p style="margin-top:10px;color:var(--text-muted);font-size:0.85rem;">Haz clic para ver en grande</p>
+            </div>
+        </div>
+        <?php endif; ?>
 
     </main>
 

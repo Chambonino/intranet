@@ -157,25 +157,34 @@ $fotos = $pdo->query("SELECT g.*, d.nombre as dept_nombre FROM galeria_fotos g L
             </div>
             <?php else: ?>
             <div class="content-card">
-                <div class="card-header"><h2>Lista de Fotos (<?php echo count($fotos); ?>)</h2><a href="galeria.php?action=add" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Subir Fotos</a></div>
-                <div class="card-body"><div class="table-responsive"><table class="data-table">
-                    <thead><tr><th>Imagen</th><th>Título</th><th>Departamento</th><th>Tipo</th><th>Estado</th><th>Acciones</th></tr></thead>
-                    <tbody>
-                    <?php foreach ($fotos as $f): ?>
-                    <tr>
-                        <td><img src="../assets/uploads/gallery/<?php echo $f['imagen']; ?>" alt="" style="width:60px;height:45px;object-fit:cover;border-radius:5px;"></td>
-                        <td><?php echo htmlspecialchars($f['titulo'] ?: '-'); ?></td>
-                        <td><?php echo htmlspecialchars($f['dept_nombre'] ?? 'General'); ?></td>
-                        <td><?php echo htmlspecialchars($f['tipo_evento'] ?: '-'); ?></td>
-                        <td><span class="badge badge-<?php echo $f['activo']?'active':'inactive'; ?>"><?php echo $f['activo']?'Activo':'Inactivo'; ?></span></td>
-                        <td class="actions">
-                            <a href="galeria.php?action=edit&id=<?php echo $f['id']; ?>" class="btn-edit"><i class="fas fa-edit"></i></a>
-                            <button onclick="if(confirmDelete()) location.href='galeria.php?action=delete&id=<?php echo $f['id']; ?>'" class="btn-delete"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
+                <div class="card-header"><h2>Fotos (<?php echo count($fotos); ?>)</h2><a href="galeria.php?action=add" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Subir Fotos</a></div>
+                <div class="card-body">
+                    <!-- Vista de galería con preview -->
+                    <?php
+                    $grouped = [];
+                    foreach ($fotos as $f) {
+                        $key = ($f['dept_nombre'] ?? 'General') . ($f['tipo_evento'] ? ' - ' . $f['tipo_evento'] : '');
+                        $grouped[$key][] = $f;
+                    }
+                    foreach ($grouped as $group => $items):
+                    ?>
+                    <h4 style="margin:20px 0 12px;padding-bottom:8px;border-bottom:1px solid #eee;color:#333;font-size:0.95rem;">
+                        <i class="fas fa-folder" style="color:#1976d2;"></i> <?php echo htmlspecialchars($group); ?>
+                        <span style="font-size:0.75rem;color:#999;font-weight:normal;">(<?php echo count($items); ?> fotos)</span>
+                    </h4>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:15px;">
+                        <?php foreach ($items as $f): ?>
+                        <div style="position:relative;border-radius:8px;overflow:hidden;height:90px;border:1px solid #eee;">
+                            <img src="../assets/uploads/gallery/<?php echo $f['imagen']; ?>" style="width:100%;height:100%;object-fit:cover;cursor:pointer;" onclick="window.open(this.src)" title="<?php echo htmlspecialchars($f['titulo'] ?: 'Sin título'); ?>">
+                            <div style="position:absolute;top:4px;right:4px;display:flex;gap:3px;">
+                                <a href="galeria.php?action=edit&id=<?php echo $f['id']; ?>" style="width:22px;height:22px;background:#1976d2;color:white;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.6rem;"><i class="fas fa-edit"></i></a>
+                                <button onclick="if(confirmDelete()) location.href='galeria.php?action=delete&id=<?php echo $f['id']; ?>'" style="width:22px;height:22px;background:#e53935;color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.6rem;"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
                     <?php endforeach; ?>
-                    </tbody>
-                </table></div></div>
+                </div>
             </div>
             <?php endif; ?>
         </main>
