@@ -40,12 +40,20 @@ body {
 }
 
 /* ============================================
-   HEADER
+   HEADER - FIXED
    ============================================ */
 .header {
     background: var(--bg-primary);
     padding: 20px 40px;
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+.header-spacer {
+    height: 90px;
 }
 
 .header-content {
@@ -915,16 +923,33 @@ body {
    FOOTER
    ============================================ */
 .footer {
-    background: var(--bg-card);
-    border-top: 1px solid var(--border-color);
-    padding: 25px 40px;
+    background: url('../img/fondo1.png') center/cover;
+    position: relative;
+    padding: 30px 40px;
     text-align: center;
     margin-top: 20px;
 }
 
+.footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+}
+
 .footer p {
-    color: var(--text-muted);
+    position: relative;
+    z-index: 1;
+    color: var(--text-secondary);
     font-size: 0.8rem;
+}
+
+.footer a {
+    position: relative;
+    z-index: 1;
 }
 
 /* ============================================

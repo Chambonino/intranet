@@ -101,8 +101,8 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
 </head>
 <body>
 
-    <!-- HEADER -->
-    <header class="header" style="background: url('assets/img/fondo1.png') center/cover; position:relative;">
+    <!-- HEADER FIXED -->
+    <header class="header" style="background: url('assets/img/fondo1.png') center/cover; position:fixed;top:0;left:0;right:0;z-index:1000;">
         <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.65);"></div>
         <div class="header-content" style="position:relative;z-index:1;">
             <div class="logo-text">
@@ -131,6 +131,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
             </div>
         </div>
     </header>
+    <div style="height:90px;"></div>
 
     <!-- AVISOS con fade automático -->
     <?php if (count($avisos) > 0): ?>
@@ -187,11 +188,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 <div class="section-card" style="margin-bottom:20px;">
                     <div class="section-header"><i class="fas fa-th"></i> Aplicaciones R&aacute;pidas</div>
                     <div class="apps-grid"><?php foreach ($aplicaciones as $app): ?>
-                        <?php if ($app['url'] === 'http://192.168.1.2/a' && $organigrama): ?>
-                        <a href="javascript:void(0)" onclick="openImageModal('assets/uploads/company/<?php echo $organigrama['imagen']; ?>','Organigrama Corporativo')" class="app-card" style="background:<?php echo $app['color']; ?>;"><i class="fas fa-sitemap"></i><span>Organigrama</span></a>
-                        <?php else: ?>
                         <a href="<?php echo htmlspecialchars($app['url']); ?>" target="_blank" class="app-card" style="background:<?php echo $app['color']; ?>;"><i class="fas <?php echo $app['icono']; ?>"></i><span><?php echo htmlspecialchars($app['nombre']); ?></span></a>
-                        <?php endif; ?>
                     <?php endforeach; ?></div>
                 </div>
                 <!-- Countdown con efecto -->
@@ -289,25 +286,6 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
             </div>
         </div>
 
-        <!-- ROW 5: KPIs -->
-        <?php if (count($kpis) > 0): ?>
-        <div class="section-card" style="margin-bottom:25px;">
-            <div class="section-header"><i class="fas fa-chart-line"></i> Indicadores KPI's</div>
-            <div style="padding:15px 20px 20px;">
-                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
-                    <?php foreach ($kpis as $k): $ext = strtolower(pathinfo($k['archivo'], PATHINFO_EXTENSION)); ?>
-                    <div style="display:flex;align-items:center;gap:12px;background:var(--bg-input);border-radius:8px;padding:14px;">
-                        <div style="width:36px;height:36px;background:<?php echo $ext === 'pdf' ? 'var(--accent-red)' : 'var(--accent-green)'; ?>;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0;"><i class="fas fa-file"></i></div>
-                        <div style="flex:1;min-width:0;"><div style="font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($k['nombre']); ?></div><div style="font-size:0.65rem;color:var(--text-muted);"><?php echo htmlspecialchars($k['dept_nombre'] ?? ''); ?> &bull; <?php echo strtoupper($ext); ?></div></div>
-                        <a href="assets/uploads/kpis/<?php echo $k['archivo']; ?>" target="_blank" style="color:var(--text-muted);font-size:0.9rem;"><i class="fas fa-external-link-alt"></i></a>
-                        <a href="assets/uploads/kpis/<?php echo $k['archivo']; ?>" download style="color:var(--text-muted);font-size:0.9rem;"><i class="fas fa-download"></i></a>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </div>
-        <?php endif; ?>
-
         <!-- ROW 6: Archivos paginados -->
         <div class="section-card files-card">
             <div class="files-header"><div class="files-header-left"><i class="fas fa-folder-open"></i> Archivos por Departamento</div>
@@ -401,17 +379,6 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 </div>
             </div>
         </div>
-
-        <!-- ROW 9: Organigrama -->
-        <?php if ($organigrama): ?>
-        <div class="section-card" style="margin-bottom:25px;">
-            <div class="section-header"><i class="fas fa-sitemap"></i> Organigrama Corporativo</div>
-            <div style="padding:20px;text-align:center;">
-                <img src="assets/uploads/company/<?php echo $organigrama['imagen']; ?>" style="max-width:100%;max-height:400px;border-radius:12px;cursor:pointer;transition:transform 0.3s;" onclick="openImageModal('assets/uploads/company/<?php echo $organigrama['imagen']; ?>','<?php echo htmlspecialchars($organigrama['titulo'], ENT_QUOTES); ?>')" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                <p style="margin-top:10px;color:var(--text-muted);font-size:0.85rem;">Haz clic para ver en grande</p>
-            </div>
-        </div>
-        <?php endif; ?>
 
     </main>
 
