@@ -48,7 +48,7 @@ if (!$articulo) { header('Location: index.php'); exit; }
         <?php if ($articulo['imagen']): ?>
         <img src="assets/uploads/articles/<?php echo $articulo['imagen']; ?>" class="feat-img" alt="">
         <?php endif; ?>
-        <div class="body"><?php echo nl2br(htmlspecialchars($articulo['contenido'])); ?></div>
+        <div class="body"><?php echo $articulo['contenido']; ?></div>
     </main>
     <footer class="footer">
         <p>&copy; <?php echo date('Y'); ?> Automotriz Corp.</p>
