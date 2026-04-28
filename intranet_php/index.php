@@ -188,7 +188,11 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 <div class="section-card" style="margin-bottom:20px;">
                     <div class="section-header"><i class="fas fa-th"></i> Aplicaciones R&aacute;pidas</div>
                     <div class="apps-grid"><?php foreach ($aplicaciones as $app): ?>
+                        <?php if ($app['url'] === 'http://192.168.1.2/a' && $organigrama): ?>
+                        <a href="javascript:void(0)" onclick="openImageModal('assets/uploads/company/<?php echo $organigrama['imagen']; ?>','Organigrama Corporativo')" class="app-card" style="background:<?php echo $app['color']; ?>;"><i class="fas <?php echo $app['icono']; ?>"></i><span><?php echo htmlspecialchars($app['nombre']); ?></span></a>
+                        <?php else: ?>
                         <a href="<?php echo htmlspecialchars($app['url']); ?>" target="_blank" class="app-card" style="background:<?php echo $app['color']; ?>;"><i class="fas <?php echo $app['icono']; ?>"></i><span><?php echo htmlspecialchars($app['nombre']); ?></span></a>
+                        <?php endif; ?>
                     <?php endforeach; ?></div>
                 </div>
                 <!-- Countdown con efecto -->
