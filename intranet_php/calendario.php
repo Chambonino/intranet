@@ -149,7 +149,7 @@ if ($nextMonth > 12) { $nextMonth = 1; $nextYear++; }
                                         foreach ($eventosPorDia[$diaActual] as $ev):
                                             $evColor = $ev['dept_color'] ?: $ev['color'];
                                             $evTime = $ev['hora_inicio'] ? date('H:i', strtotime($ev['hora_inicio'])) . ' ' : '';
-                                            echo '<a href="evento.php?id=' . $ev['id'] . '" class="cal-event-bar" style="background:' . $evColor . ';">' . $evTime . htmlspecialchars($ev['titulo']) . '</a>';
+                                            echo '<a href="javascript:void(0)" onclick="openEvent(' . $ev['id'] . ')" class="cal-event-bar" style="background:' . $evColor . ';">' . $evTime . htmlspecialchars($ev['titulo']) . '</a>';
                                         endforeach;
                                     endif;
                                     echo '</td>';
@@ -168,5 +168,59 @@ if ($nextMonth > 12) { $nextMonth = 1; $nextYear++; }
     <footer class="footer">
         <p>&copy; <?php echo date('Y'); ?> Automotriz Corp. | <a href="index.php" style="color:var(--text-muted);text-decoration:none;">Inicio</a></p>
     </footer>
+
+    <script>
+    var eventos = <?php echo json_encode(array_map(function($e) use ($mesesEsp) {
+        return [
+            'id' => $e['id'],
+            'titulo' => $e['titulo'],
+            'descripcion' => $e['descripcion'] ?? '',
+            'fecha' => date('d', strtotime($e['fecha_evento'])) . ' de ' . $mesesEsp[(int)date('m', strtotime($e['fecha_evento']))] . ' de ' . date('Y', strtotime($e['fecha_evento'])),
+            'hora_inicio' => $e['hora_inicio'] ? date('H:i', strtotime($e['hora_inicio'])) : '',
+            'hora_fin' => $e['hora_fin'] ? date('H:i', strtotime($e['hora_fin'])) : '',
+            'lugar' => $e['lugar'] ?? '',
+            'departamento' => $e['departamento_nombre'] ?? '',
+            'color' => $e['dept_color'] ?: $e['color'],
+            'archivo' => $e['archivo'] ?? ''
+        ];
+    }, $eventosDelMes)); ?>;
+
+    function openEvent(id) {
+        var ev = eventos.find(function(e) { return e.id === id; });
+        if (!ev) return;
+
+        var m = document.getElementById('evModal');
+        if (!m) {
+            m = document.createElement('div');
+            m.id = 'evModal';
+            m.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;';
+            m.addEventListener('click', function(e) { if (e.target === m) m.style.display = 'none'; });
+            document.body.appendChild(m);
+        }
+
+        var hora = ev.hora_inicio ? '<p style="margin-bottom:8px;"><i class="fas fa-clock" style="color:#42a5f5;width:20px;"></i> ' + ev.hora_inicio + (ev.hora_fin ? ' - ' + ev.hora_fin : '') + '</p>' : '';
+        var lugar = ev.lugar ? '<p style="margin-bottom:8px;"><i class="fas fa-map-marker-alt" style="color:#ef5350;width:20px;"></i> ' + ev.lugar + '</p>' : '';
+        var dept = ev.departamento ? '<p style="margin-bottom:8px;"><i class="fas fa-building" style="color:#66bb6a;width:20px;"></i> ' + ev.departamento + '</p>' : '';
+        var archivo = ev.archivo ? '<div style="margin-top:15px;padding:12px;background:rgba(255,255,255,0.1);border-radius:8px;"><a href="assets/uploads/events/' + ev.archivo + '" target="_blank" style="color:#42a5f5;text-decoration:none;"><i class="fas fa-paperclip"></i> Descargar archivo adjunto</a></div>' : '';
+        var desc = ev.descripcion ? '<div style="margin-top:15px;padding:15px;background:rgba(255,255,255,0.05);border-radius:8px;color:#B0BEC5;font-size:0.9rem;line-height:1.7;">' + ev.descripcion + '</div>' : '';
+
+        m.innerHTML = '<div style="background:#232A33;border-radius:16px;padding:0;max-width:500px;width:90%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);">' +
+            '<div style="background:' + ev.color + ';padding:25px 30px;position:relative;">' +
+                '<button onclick="document.getElementById(\'evModal\').style.display=\'none\'" style="position:absolute;top:12px;right:15px;background:none;border:none;color:rgba(255,255,255,0.8);font-size:1.3rem;cursor:pointer;"><i class="fas fa-times"></i></button>' +
+                '<h2 style="color:white;font-size:1.3rem;margin-bottom:5px;">' + ev.titulo + '</h2>' +
+                '<p style="color:rgba(255,255,255,0.8);font-size:0.85rem;"><i class="fas fa-calendar"></i> ' + ev.fecha + '</p>' +
+            '</div>' +
+            '<div style="padding:25px 30px;color:#e0e0e0;font-size:0.9rem;">' +
+                hora + lugar + dept + desc + archivo +
+                '<div style="margin-top:20px;text-align:right;"><a href="evento.php?id=' + ev.id + '" style="color:#42a5f5;text-decoration:none;font-weight:600;font-size:0.85rem;">Ver detalle completo <i class="fas fa-arrow-right"></i></a></div>' +
+            '</div>' +
+        '</div>';
+        m.style.display = 'flex';
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') { var m = document.getElementById('evModal'); if (m) m.style.display = 'none'; }
+    });
+    </script>
 </body>
 </html>
