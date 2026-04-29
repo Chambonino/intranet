@@ -41,10 +41,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
 <body>
     <header class="header">
         <div class="header-content">
-            <div class="logo-text">
-                <h1>AUTOMOTRIZ CORP</h1>
-                <span>INYECCI&Oacute;N &bull; CROMADO &bull; PINTURA</span>
-            </div>
+            <img src="assets/img/logo.png" alt="NB" style="height:45px;">
         </div>
     </header>
     <main class="event-detail">

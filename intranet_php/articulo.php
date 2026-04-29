@@ -32,10 +32,7 @@ if (!$articulo) { header('Location: index.php'); exit; }
 <body>
     <header class="header">
         <div class="header-content">
-            <div class="logo-text">
-                <h1>AUTOMOTRIZ CORP</h1>
-                <span>INYECCI&Oacute;N &bull; CROMADO &bull; PINTURA</span>
-            </div>
+            <img src="assets/img/logo.png" alt="NB" style="height:45px;">
         </div>
     </header>
     <main class="article-page">

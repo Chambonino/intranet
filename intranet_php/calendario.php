@@ -84,10 +84,7 @@ if ($nextMonth > 12) { $nextMonth = 1; $nextYear++; }
 <body>
     <header class="header">
         <div class="header-content">
-            <div class="logo-text">
-                <h1>AUTOMOTRIZ CORP</h1>
-                <span>INYECCI&Oacute;N &bull; CROMADO &bull; PINTURA</span>
-            </div>
+            <div class="logo-text"><img src="assets/img/logo.png" alt="NB" style="height:45px;"></div>
             <nav><a href="index.php" style="color: white; text-decoration: none; font-weight: 500;"><i class="fas fa-home"></i> Inicio</a></nav>
         </div>
     </header>

@@ -78,7 +78,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
     <header class="header" style="background: url('assets/img/fondo1.png') center/cover; position:fixed;top:0;left:0;right:0;z-index:1000;">
         <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.65);"></div>
         <div class="header-content" style="position:relative;z-index:1;">
-            <div class="logo-text"><h1>AUTOMOTRIZ CORP</h1><span>INYECCI&Oacute;N &bull; CROMADO &bull; PINTURA</span></div>
+            <div class="logo-text"><img src="assets/img/logo.png" alt="NB" style="height:45px;"></div>
             <a href="index.php" style="color:white;text-decoration:none;font-weight:500;"><i class="fas fa-home"></i> Inicio</a>
         </div>
     </header>

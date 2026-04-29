@@ -103,11 +103,10 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
 
     <!-- HEADER FIXED -->
     <header class="header" style="background: url('assets/img/fondo1.png') center/cover; position:fixed;top:0;left:0;right:0;z-index:1000;">
-        <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.65);"></div>
+        <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(27,32,40,0.85);"></div>
         <div class="header-content" style="position:relative;z-index:1;">
-            <div class="logo-text">
-                <h1>AUTOMOTRIZ CORP</h1>
-                <span>INYECCI&Oacute;N &bull; CROMADO &bull; PINTURA</span>
+            <div style="display:flex;align-items:center;gap:15px;">
+                <img src="assets/img/logo.png" alt="Nicro Bolta" style="height:55px;">
             </div>
             <div style="display:flex;align-items:center;gap:25px;">
                 <div style="text-align:right;">
@@ -131,7 +130,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
             </div>
         </div>
     </header>
-    <div style="height:100px;"></div>
+    <div style="height:110px;"></div>
 
     <!-- AVISOS con fade automático -->
     <?php if (count($avisos) > 0): ?>

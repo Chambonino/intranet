@@ -6,13 +6,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-    --bg-primary: #0F0F0F;
-    --bg-card: #1A1A1A;
-    --bg-card-hover: #222222;
-    --bg-input: #2a2a2a;
+    --bg-primary: #1B2028;
+    --bg-card: #232A33;
+    --bg-card-hover: #2B333E;
+    --bg-input: #2F3742;
     --text-primary: #FFFFFF;
-    --text-secondary: #A0A0A0;
-    --text-muted: #666666;
+    --text-secondary: #B0BEC5;
+    --text-muted: #78909C;
     --accent-red: #E53935;
     --accent-blue: #1976D2;
     --accent-green: #43A047;
@@ -20,9 +20,9 @@
     --accent-purple: #9C27B0;
     --accent-teal: #00BCD4;
     --accent-pink: #E91E63;
-    --border-color: #2a2a2a;
+    --border-color: #37414D;
     --radius: 12px;
-    --shadow: 0 4px 20px rgba(0,0,0,0.4);
+    --shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
 * {
@@ -937,7 +937,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,0.7);
+    background: rgba(27,32,40,0.8);
 }
 
 .footer p {
