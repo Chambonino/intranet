@@ -28,7 +28,7 @@ if ($ldap) {
     $bind = @ldap_bind($ldap, $ldap_user, $ldap_pass);
     if ($bind) {
         // Filtro LDAP
-        $filter = "(&(objectCategory=person)(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2))";
+        $filter = "(&(Company=Nicrobolta)(sn=*)(Useraccountcontrol=512)";
         if ($busqueda) {
             $filter .= "(|(givenName=*$busqueda*)(sn=*$busqueda*)(displayName=*$busqueda*)(mail=*$busqueda*))";
         }
