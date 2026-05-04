@@ -172,11 +172,11 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 <div class="section-header" style="justify-content:space-between;"><span><i class="fas fa-calendar-check"></i> Eventos</span><a href="calendario.php" style="font-size:0.75rem;color:var(--accent-blue);text-decoration:none;">Ver calendario completo <i class="fas fa-arrow-right"></i></a></div>
                 <div style="padding:15px 20px 20px;">
                     <?php foreach ($eventosPage as $ev): $isPast = strtotime($ev['fecha_evento']) < strtotime('today'); ?>
-                    <a href="evento.php?id=<?php echo $ev['id']; ?>" style="text-decoration:none;color:inherit;display:flex;gap:12px;padding:12px;background:var(--bg-input);border-radius:8px;margin-bottom:10px;border-left:4px solid <?php echo $ev['dept_color'] ?: $ev['color']; ?>;<?php echo $isPast ? 'opacity:0.6;' : ''; ?>">
+                    <div onclick="openEventModal(<?php echo $ev['id']; ?>)" style="cursor:pointer;text-decoration:none;color:inherit;display:flex;gap:12px;padding:12px;background:var(--bg-input);border-radius:8px;margin-bottom:10px;border-left:4px solid <?php echo $ev['dept_color'] ?: $ev['color']; ?>;<?php echo $isPast ? 'opacity:0.6;' : ''; ?>transition:background 0.3s;" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background='var(--bg-input)'">
                         <div class="evento-fecha"><span class="dia"><?php echo date('d', strtotime($ev['fecha_evento'])); ?></span><span class="mes"><?php echo strtoupper(substr($mesesEsp[(int)date('m', strtotime($ev['fecha_evento']))], 0, 3)); ?></span></div>
                         <div style="flex:1;"><h5 style="font-size:0.85rem;font-weight:600;"><?php echo htmlspecialchars($ev['titulo']); ?></h5><p style="font-size:0.72rem;color:var(--text-muted);"><?php if ($ev['hora_inicio']): ?><i class="fas fa-clock"></i> <?php echo date('H:i', strtotime($ev['hora_inicio'])); ?> <?php endif; ?><?php if ($ev['lugar']): ?><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($ev['lugar']); ?><?php endif; ?> <?php if ($ev['dept_nombre']): ?>&bull; <?php echo htmlspecialchars($ev['dept_nombre']); ?><?php endif; ?></p></div>
                         <?php if ($isPast): ?><span style="font-size:0.65rem;color:var(--text-muted);align-self:center;">Pasado</span><?php endif; ?>
-                    </a>
+                    </div>
                     <?php endforeach; ?>
                     <?php if ($totalEvPages > 1): ?><div style="display:flex;justify-content:center;gap:5px;margin-top:10px;"><?php for ($p = 1; $p <= $totalEvPages; $p++): ?><a href="?ev_page=<?php echo $p; ?>" style="padding:5px 12px;border-radius:6px;font-size:0.8rem;text-decoration:none;<?php echo $p == $evPage ? 'background:var(--accent-red);color:white;' : 'background:var(--bg-input);color:var(--text-secondary);'; ?>"><?php echo $p; ?></a><?php endfor; ?></div><?php endif; ?>
                     <?php if (count($eventosPage) === 0): ?><p style="color:var(--text-muted);font-size:0.85rem;">Sin eventos</p><?php endif; ?>
@@ -388,6 +388,52 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
     <footer class="footer"><p>&copy; <?php echo date('Y'); ?> Automotriz Corp. | <a href="admin/login.php" style="color:var(--text-muted);text-decoration:none;">Administraci&oacute;n</a></p></footer>
 
     <script>
+    // EVENTOS DATA para modal
+    var eventosData = <?php echo json_encode(array_map(function($e) use ($mesesEsp) {
+        return [
+            'id' => $e['id'],
+            'titulo' => $e['titulo'],
+            'descripcion' => $e['descripcion'] ?? '',
+            'fecha' => date('d', strtotime($e['fecha_evento'])) . ' de ' . $mesesEsp[(int)date('m', strtotime($e['fecha_evento']))] . ' de ' . date('Y', strtotime($e['fecha_evento'])),
+            'hora_inicio' => $e['hora_inicio'] ? date('H:i', strtotime($e['hora_inicio'])) : '',
+            'hora_fin' => $e['hora_fin'] ? date('H:i', strtotime($e['hora_fin'])) : '',
+            'lugar' => $e['lugar'] ?? '',
+            'dept' => $e['dept_nombre'] ?? '',
+            'color' => $e['dept_color'] ?: $e['color'],
+            'archivo' => $e['archivo'] ?? ''
+        ];
+    }, $eventosPage)); ?>;
+
+    function openEventModal(id) {
+        var ev = eventosData.find(function(e) { return e.id === id; });
+        if (!ev) return;
+        var m = document.getElementById('eventModal');
+        if (!m) {
+            m = document.createElement('div');
+            m.id = 'eventModal';
+            m.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;';
+            m.addEventListener('click', function(e) { if (e.target === m) m.style.display = 'none'; });
+            document.body.appendChild(m);
+        }
+        var hora = ev.hora_inicio ? '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><i class="fas fa-clock" style="color:#42a5f5;width:18px;"></i><span>' + ev.hora_inicio + (ev.hora_fin ? ' - ' + ev.hora_fin : '') + '</span></div>' : '';
+        var lugar = ev.lugar ? '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><i class="fas fa-map-marker-alt" style="color:#ef5350;width:18px;"></i><span>' + ev.lugar + '</span></div>' : '';
+        var dept = ev.dept ? '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><i class="fas fa-building" style="color:#66bb6a;width:18px;"></i><span>' + ev.dept + '</span></div>' : '';
+        var desc = ev.descripcion ? '<div style="margin-top:18px;padding:15px;background:rgba(255,255,255,0.05);border-radius:10px;font-size:0.9rem;line-height:1.8;color:var(--text-secondary);">' + ev.descripcion + '</div>' : '';
+        var archivo = ev.archivo ? '<div style="margin-top:15px;padding:14px;background:rgba(25,118,210,0.1);border:1px solid rgba(25,118,210,0.3);border-radius:10px;display:flex;align-items:center;gap:10px;"><i class="fas fa-paperclip" style="color:#42a5f5;"></i><a href="assets/uploads/events/' + ev.archivo + '" target="_blank" style="color:#42a5f5;text-decoration:none;font-weight:500;">Descargar archivo adjunto</a><a href="assets/uploads/events/' + ev.archivo + '" download style="margin-left:auto;color:#90caf9;font-size:0.85rem;"><i class="fas fa-download"></i></a></div>' : '';
+
+        m.innerHTML = '<div style="background:var(--bg-card);border-radius:16px;max-width:520px;width:92%;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.5);animation:fadeIn 0.3s ease;">' +
+            '<div style="background:' + ev.color + ';padding:28px 30px;position:relative;">' +
+                '<button onclick="document.getElementById(\'eventModal\').style.display=\'none\'" style="position:absolute;top:15px;right:18px;background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;"><i class="fas fa-times"></i></button>' +
+                '<h2 style="color:white;font-size:1.4rem;margin-bottom:8px;padding-right:40px;">' + ev.titulo + '</h2>' +
+                '<p style="color:rgba(255,255,255,0.85);font-size:0.9rem;display:flex;align-items:center;gap:8px;"><i class="fas fa-calendar"></i> ' + ev.fecha + '</p>' +
+            '</div>' +
+            '<div style="padding:28px 30px;color:var(--text-primary);font-size:0.9rem;">' +
+                hora + lugar + dept + desc + archivo +
+            '</div>' +
+        '</div>';
+        m.style.display = 'flex';
+    }
+
     // SLIDER
     (function(){const s=document.querySelectorAll('.slide'),d=document.querySelectorAll('.dot');if(s.length<=1)return;let c=0,t;function show(i){s.forEach(x=>x.classList.remove('active'));d.forEach(x=>x.classList.remove('active'));c=(i+s.length)%s.length;s[c].classList.add('active');if(d[c])d[c].classList.add('active')}function go(){t=setInterval(()=>show(c+1),5000)}function r(){clearInterval(t);go()}document.querySelector('.slider-nav-btn.next')?.addEventListener('click',()=>{show(c+1);r()});document.querySelector('.slider-nav-btn.prev')?.addEventListener('click',()=>{show(c-1);r()});d.forEach((x,i)=>x.addEventListener('click',()=>{show(i);r()}));go()})();
 
@@ -454,7 +500,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
         }, 4000);
     })();
 
-    document.addEventListener('keydown',function(e){if(e.key==='Escape'){['imgM','vidM','bdM','anivM'].forEach(id=>{const m=document.getElementById(id);if(m)m.style.display='none';});closeVM();}});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'){['imgM','vidM','bdM','anivM','eventModal'].forEach(id=>{const m=document.getElementById(id);if(m)m.style.display='none';});closeVM();}});
     </script>
 </body>
 </html>
