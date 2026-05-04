@@ -131,125 +131,148 @@ if (isset($_GET['vcard'])) {
         .dir-stats { color: var(--text-muted); font-size: 0.82rem; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
         
         /* Grid de tarjetas */
-        .dir-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .dir-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 22px; }
         
-        /* Tarjeta de contacto */
+        /* Tarjeta de contacto - Estilo nuevo */
         .contact-card {
-            background: var(--bg-card);
-            border-radius: 16px;
+            background: #1a1f2e;
+            border-radius: 18px;
             overflow: hidden;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
-            border: 1px solid transparent;
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 28px 25px 0;
         }
         .contact-card:hover {
             transform: translateY(-8px) scale(1.02);
-            border-color: var(--accent-blue);
-            box-shadow: 0 20px 40px rgba(25, 118, 210, 0.15), 0 0 0 1px rgba(25, 118, 210, 0.1);
+            border-color: rgba(255,180,50,0.4);
+            box-shadow: 0 20px 50px rgba(255,180,50,0.1), 0 0 0 1px rgba(255,180,50,0.15);
         }
         .contact-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--accent-blue), var(--accent-teal));
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #f48fb1, #ffb74d);
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: opacity 0.4s;
         }
         .contact-card:hover::before { opacity: 1; }
         
-        .card-top {
-            display: flex;
-            gap: 16px;
-            padding: 22px 22px 0;
-            align-items: flex-start;
-        }
-        
-        .card-avatar {
-            width: 68px;
-            height: 68px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid var(--bg-input);
+        /* Avatar cuadrado redondeado grande */
+        .card-avatar-box {
+            width: 80px;
+            height: 80px;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 18px;
             flex-shrink: 0;
-            transition: border-color 0.3s;
+            transition: transform 0.3s;
         }
-        .contact-card:hover .card-avatar {
-            border-color: var(--accent-blue);
+        .contact-card:hover .card-avatar-box { transform: scale(1.05); }
+        .card-avatar-box img {
+            width: 100%; height: 100%;
+            object-fit: cover;
         }
-        
-        .card-avatar-placeholder {
-            width: 68px;
-            height: 68px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
+        .card-avatar-initials {
+            width: 80px; height: 80px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #f48fb1, #f06292);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 1.5rem;
-            font-weight: 700;
-            flex-shrink: 0;
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 18px;
             transition: transform 0.3s;
         }
-        .contact-card:hover .card-avatar-placeholder { transform: scale(1.05); }
+        .contact-card:hover .card-avatar-initials { transform: scale(1.05); }
         
-        .card-info { flex: 1; min-width: 0; }
-        .card-name { font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .card-title { font-size: 0.78rem; color: var(--accent-blue); font-weight: 500; margin-bottom: 4px; }
-        .card-dept { font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
+        /* Info */
+        .card-name { font-size: 1.25rem; font-weight: 800; color: #ffffff; margin-bottom: 4px; }
+        .card-title { font-size: 0.88rem; color: #f48fb1; font-weight: 600; margin-bottom: 8px; }
+        .card-dept-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.08);
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 18px;
+        }
+        .card-dept-badge i { font-size: 0.7rem; }
         
+        /* Contactos */
         .card-contacts {
-            padding: 15px 22px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 12px;
+            padding-bottom: 20px;
         }
-        
         .card-contact-row {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 0.82rem;
-            color: var(--text-secondary);
+            gap: 12px;
+            font-size: 0.9rem;
+            color: #cfd8dc;
         }
-        .card-contact-row i { width: 16px; color: var(--text-muted); font-size: 0.8rem; }
-        .card-contact-row a { color: var(--accent-blue); text-decoration: none; transition: color 0.3s; }
-        .card-contact-row a:hover { color: var(--accent-teal); text-decoration: underline; }
+        .card-contact-row .ci { width: 20px; text-align: center; }
+        .card-contact-row .ci-phone { color: #a5d6a7; }
+        .card-contact-row .ci-mobile { color: #ffb74d; }
+        .card-contact-row .ci-email { color: #ffb74d; }
+        .card-contact-row a { color: #cfd8dc; text-decoration: none; transition: color 0.3s; }
+        .card-contact-row a:hover { color: #ffffff; }
         
-        /* Botones de acción */
+        /* Botones de acción - estilo con bordes */
         .card-actions {
             display: flex;
-            gap: 0;
-            border-top: 1px solid var(--border-color);
+            gap: 10px;
+            padding: 18px 0;
+            border-top: 1px solid rgba(255,255,255,0.06);
         }
-        .card-action {
+        .card-act-btn {
             flex: 1;
-            padding: 12px;
+            padding: 10px 0;
             text-align: center;
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 0.75rem;
-            font-weight: 500;
-            transition: all 0.3s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
             cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
             border: none;
-            background: none;
-            border-right: 1px solid var(--border-color);
         }
-        .card-action:last-child { border-right: none; }
-        .card-action:hover { background: rgba(25,118,210,0.08); color: var(--accent-blue); }
-        .card-action i { font-size: 1rem; }
-        .card-action.teams:hover { color: #6264A7; }
-        .card-action.outlook:hover { color: #0078D4; }
-        .card-action.phone:hover { color: var(--accent-green); }
-        .card-action.vcard:hover { color: var(--accent-orange); }
+        .card-act-btn.btn-call {
+            background: transparent;
+            border: 1.5px solid rgba(255,255,255,0.15);
+            color: #cfd8dc;
+        }
+        .card-act-btn.btn-call:hover { border-color: #a5d6a7; color: #a5d6a7; background: rgba(165,214,167,0.08); }
+        .card-act-btn.btn-teams {
+            background: transparent;
+            border: 1.5px solid rgba(255,255,255,0.15);
+            color: #cfd8dc;
+        }
+        .card-act-btn.btn-teams:hover { border-color: #7986cb; color: #7986cb; background: rgba(121,134,203,0.08); }
+        .card-act-btn.btn-correo {
+            background: #ffb74d;
+            color: #1a1f2e;
+            border: 1.5px solid #ffb74d;
+        }
+        .card-act-btn.btn-correo:hover { background: #ffa726; border-color: #ffa726; }
+        .card-act-btn.btn-qr {
+            background: transparent;
+            border: 1.5px solid rgba(255,255,255,0.15);
+            color: #cfd8dc;
+            max-width: 44px;
+        }
+        .card-act-btn.btn-qr:hover { border-color: #ffb74d; color: #ffb74d; }
         
         /* QR Modal */
         .qr-modal {
@@ -334,55 +357,46 @@ if (isset($_GET['vcard'])) {
                 $celClean = preg_replace('/[^0-9+]/', '', $u['celular']);
             ?>
             <div class="contact-card">
-                <div class="card-top">
-                    <?php if ($u['foto']): ?>
-                    <img src="<?php echo $u['foto']; ?>" class="card-avatar" alt="">
-                    <?php else: ?>
-                    <div class="card-avatar-placeholder"><?php echo $iniciales; ?></div>
-                    <?php endif; ?>
-                    <div class="card-info">
-                        <div class="card-name"><?php echo htmlspecialchars($u['nombre']); ?></div>
-                        <div class="card-title"><?php echo htmlspecialchars($u['puesto']); ?></div>
-                        <div class="card-dept"><i class="fas fa-building"></i> <?php echo htmlspecialchars($u['departamento']); ?></div>
-                    </div>
-                </div>
+                <?php if ($u['foto']): ?>
+                <div class="card-avatar-box"><img src="<?php echo $u['foto']; ?>" alt=""></div>
+                <?php else: ?>
+                <div class="card-avatar-initials"><?php echo $iniciales; ?></div>
+                <?php endif; ?>
+
+                <div class="card-name"><?php echo htmlspecialchars($u['nombre']); ?></div>
+                <div class="card-title"><?php echo htmlspecialchars($u['puesto']); ?></div>
+                <span class="card-dept-badge"><i class="fas fa-building"></i> <?php echo htmlspecialchars($u['departamento']); ?></span>
+
                 <div class="card-contacts">
                     <?php if ($u['telefono']): ?>
                     <div class="card-contact-row">
-                        <i class="fas fa-phone"></i>
-                        <a href="tel:<?php echo $telClean; ?>" title="Llamar por Teams"><?php echo htmlspecialchars($u['telefono']); ?></a>
+                        <i class="fas fa-phone ci ci-phone"></i>
+                        <a href="https://teams.microsoft.com/l/call/0/0?users=<?php echo urlencode($u['email']); ?>" target="_blank"><?php echo htmlspecialchars($u['telefono']); ?></a>
                     </div>
                     <?php endif; ?>
                     <?php if ($u['celular']): ?>
                     <div class="card-contact-row">
-                        <i class="fas fa-mobile-alt"></i>
+                        <i class="fas fa-mobile-alt ci ci-mobile"></i>
                         <a href="tel:<?php echo $celClean; ?>"><?php echo htmlspecialchars($u['celular']); ?></a>
                     </div>
                     <?php endif; ?>
                     <?php if ($u['email']): ?>
                     <div class="card-contact-row">
-                        <i class="fas fa-envelope"></i>
-                        <a href="mailto:<?php echo htmlspecialchars($u['email']); ?>" title="Enviar correo en Outlook"><?php echo htmlspecialchars($u['email']); ?></a>
+                        <i class="fas fa-envelope ci ci-email"></i>
+                        <a href="mailto:<?php echo htmlspecialchars($u['email']); ?>"><?php echo htmlspecialchars($u['email']); ?></a>
                     </div>
                     <?php endif; ?>
                 </div>
+
                 <div class="card-actions">
                     <?php if ($u['telefono']): ?>
-                    <a href="https://teams.microsoft.com/l/call/0/0?users=<?php echo urlencode($u['email']); ?>" target="_blank" class="card-action phone" title="Llamar por Teams">
-                        <i class="fas fa-phone-alt"></i><span>Llamar</span>
-                    </a>
+                    <a href="https://teams.microsoft.com/l/call/0/0?users=<?php echo urlencode($u['email']); ?>" target="_blank" class="card-act-btn btn-call"><i class="fas fa-phone-alt"></i> Llamar</a>
                     <?php endif; ?>
                     <?php if ($u['email']): ?>
-                    <a href="mailto:<?php echo htmlspecialchars($u['email']); ?>" class="card-action outlook" title="Enviar correo por Outlook">
-                        <i class="fas fa-envelope"></i><span>Correo</span>
-                    </a>
-                    <a href="https://teams.microsoft.com/l/chat/0/0?users=<?php echo urlencode($u['email']); ?>" target="_blank" class="card-action teams" title="Chat en Teams">
-                        <i class="fab fa-microsoft"></i><span>Teams</span>
-                    </a>
+                    <a href="https://teams.microsoft.com/l/chat/0/0?users=<?php echo urlencode($u['email']); ?>" target="_blank" class="card-act-btn btn-teams"><i class="fab fa-microsoft"></i> Teams</a>
+                    <a href="mailto:<?php echo htmlspecialchars($u['email']); ?>" class="card-act-btn btn-correo"><i class="fas fa-envelope"></i> Correo</a>
                     <?php endif; ?>
-                    <button class="card-action vcard" onclick="showQR(<?php echo $idx; ?>, '<?php echo htmlspecialchars($u['nombre'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($u['puesto'], ENT_QUOTES); ?>')" title="vCard + QR">
-                        <i class="fas fa-qrcode"></i><span>QR</span>
-                    </button>
+                    <button class="card-act-btn btn-qr" onclick="showQR(<?php echo $idx; ?>, '<?php echo htmlspecialchars($u['nombre'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($u['puesto'], ENT_QUOTES); ?>')" title="QR + vCard"><i class="fas fa-qrcode"></i></button>
                 </div>
             </div>
             <?php endforeach; ?>
