@@ -77,7 +77,9 @@ $apps = $pdo->query("SELECT * FROM aplicaciones ORDER BY orden ASC")->fetchAll()
                 <div class="menu-section">
                     <a href="aplicaciones.php" class="active"><i class="fas fa-th"></i> <span>Aplicaciones</span></a>
                     <a href="kpis.php"><i class="fas fa-chart-line"></i> <span>KPIs</span></a>
-                    <a href="organigrama.php"><i class="fas fa-sitemap"></i> <span>Organigrama</span></a>
+                    <a href="organigrama_drag.php"><i class="fas fa-project-diagram"></i> <span>Organigramas (Drag&Drop)</span></a>
+                    <a href="organigrama_builder.php"><i class="fas fa-sitemap"></i> <span>Organigrama Jerárquico</span></a>
+                    <a href="organigrama.php"><i class="fas fa-image"></i> <span>Organigrama Imagen</span></a>
                     <a href="archivos.php"><i class="fas fa-folder"></i> <span>Archivos</span></a>
                     <a href="portales.php"><i class="fas fa-external-link-alt"></i> <span>Portales</span></a>
                     <a href="compania.php"><i class="fas fa-building"></i> <span>Compañía</span></a>

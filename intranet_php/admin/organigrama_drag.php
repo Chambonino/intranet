@@ -167,7 +167,9 @@ if ($action === 'edit' && $orgId) {
                 <div class="menu-section">
                     <a href="aplicaciones.php"><i class="fas fa-th"></i> <span>Aplicaciones</span></a>
                     <a href="kpis.php"><i class="fas fa-chart-line"></i> <span>KPIs</span></a>
-                    <a href="organigrama_drag.php" class="active"><i class="fas fa-project-diagram"></i> <span>Organigramas</span></a>
+                    <a href="organigrama_drag.php" class="active"><i class="fas fa-project-diagram"></i> <span>Organigramas (Drag&Drop)</span></a>
+                    <a href="organigrama_builder.php"><i class="fas fa-sitemap"></i> <span>Organigrama Jerárquico</span></a>
+                    <a href="organigrama.php"><i class="fas fa-image"></i> <span>Organigrama Imagen</span></a>
                     <a href="archivos.php"><i class="fas fa-folder"></i> <span>Archivos</span></a>
                     <a href="portales.php"><i class="fas fa-external-link-alt"></i> <span>Portales</span></a>
                     <a href="compania.php"><i class="fas fa-building"></i> <span>Compañía</span></a>
@@ -187,13 +189,20 @@ if ($action === 'edit' && $orgId) {
                 <div class="org-toolbar-actions">
                     <button class="org-tool-btn primary" onclick="addNode()"><i class="fas fa-plus"></i> Agregar Posición</button>
                     <button class="org-tool-btn" onclick="connectMode()"><i class="fas fa-link"></i> Conectar</button>
+                    <button class="org-tool-btn" onclick="autoLayout()"><i class="fas fa-magic"></i> Auto-organizar</button>
+                    <button class="org-tool-btn" onclick="zoomIn()"><i class="fas fa-search-plus"></i></button>
+                    <button class="org-tool-btn" onclick="zoomOut()"><i class="fas fa-search-minus"></i></button>
+                    <button class="org-tool-btn" onclick="zoomReset()"><i class="fas fa-expand"></i> 100%</button>
                     <button class="org-tool-btn success" onclick="saveOrg()"><i class="fas fa-save"></i> Guardar</button>
                     <button class="org-tool-btn" onclick="exportImage()"><i class="fas fa-image"></i> Exportar Imagen</button>
                     <a href="organigrama_drag.php" class="org-tool-btn"><i class="fas fa-arrow-left"></i> Volver</a>
                 </div>
             </div>
             <div class="org-canvas" id="orgCanvas">
-                <svg class="connections-svg" id="connectionsSvg"></svg>
+                <div class="org-zoom-layer" id="orgZoomLayer" style="position:absolute;top:0;left:0;width:100%;height:100%;transform-origin:0 0;">
+                    <svg class="connections-svg" id="connectionsSvg"></svg>
+                </div>
+                <div id="zoomIndicator" style="position:absolute;bottom:10px;right:14px;background:rgba(25,118,210,0.85);color:white;padding:6px 12px;border-radius:20px;font-size:0.75rem;font-weight:600;z-index:200;pointer-events:none;">100%</div>
             </div>
 
             <!-- Modal para editar nodo -->
@@ -222,14 +231,23 @@ if ($action === 'edit' && $orgId) {
             var connectFrom = null;
             var dragNode = null;
             var dragOffset = {x:0, y:0};
+            var zoomLevel = 1;
+            var NODE_W = 180, NODE_H = 145, GAP_X = 30, GAP_Y = 60;
 
             // Inicializar
-            window.onload = function() { renderAll(); };
+            window.onload = function() {
+                // Si no hay nodos posicionados, aplicar auto-layout
+                var unpositioned = nodes.filter(function(n) { return n.x === undefined || n.x === null; });
+                if (unpositioned.length > 0 && nodes.length > 0) autoLayout(true);
+                renderAll();
+            };
+
+            function getZoomLayer() { return document.getElementById('orgZoomLayer'); }
 
             function renderAll() {
-                var canvas = document.getElementById('orgCanvas');
+                var layer = getZoomLayer();
                 // Limpiar solo nodos (no SVG)
-                canvas.querySelectorAll('.org-node-card').forEach(n => n.remove());
+                layer.querySelectorAll('.org-node-card').forEach(function(n) { n.remove(); });
                 
                 // Extraer conexiones de parent
                 connections = [];
@@ -242,15 +260,15 @@ if ($action === 'edit' && $orgId) {
                     var el = document.createElement('div');
                     el.className = 'org-node-card';
                     el.dataset.id = n.id;
-                    el.style.left = n.x + 'px';
-                    el.style.top = n.y + 'px';
+                    el.style.left = (n.x || 50) + 'px';
+                    el.style.top = (n.y || 50) + 'px';
                     el.style.borderTopColor = n.color || '#1976d2';
 
                     var photoHtml = '';
                     if (n.photo) {
                         photoHtml = '<img src="../assets/uploads/company/' + n.photo + '" class="node-photo">';
                     } else {
-                        var ini = (n.name || 'NN').split(' ').map(s => s[0]).join('').substring(0,2).toUpperCase();
+                        var ini = (n.name || 'NN').split(' ').map(function(s) { return s[0]; }).join('').substring(0,2).toUpperCase();
                         photoHtml = '<div class="node-initials" style="background:' + (n.color||'#1976d2') + ';">' + ini + '</div>';
                     }
 
@@ -267,33 +285,32 @@ if ($action === 'edit' && $orgId) {
                         if (e.target.closest('.node-toolbar')) return;
                         if (isConnecting) { finishConnect(n.id); return; }
                         dragNode = n;
-                        dragOffset.x = e.clientX - n.x;
-                        dragOffset.y = e.clientY - n.y;
+                        // Coordenadas en espacio de canvas (sin zoom)
+                        dragOffset.x = e.clientX / zoomLevel - (n.x || 0);
+                        dragOffset.y = e.clientY / zoomLevel - (n.y || 0);
                         el.classList.add('dragging');
                         e.preventDefault();
                     });
 
-                    canvas.appendChild(el);
+                    layer.appendChild(el);
                 });
 
                 drawConnections();
             }
 
-            // Mouse move y up global para drag
+            // Mouse move y up global para drag (compensa zoom)
             document.addEventListener('mousemove', function(e) {
                 if (!dragNode) return;
-                var canvas = document.getElementById('orgCanvas');
-                var rect = canvas.getBoundingClientRect();
-                dragNode.x = Math.max(0, e.clientX - dragOffset.x);
-                dragNode.y = Math.max(0, e.clientY - dragOffset.y);
-                var el = canvas.querySelector('[data-id="' + dragNode.id + '"]');
+                dragNode.x = Math.max(0, e.clientX / zoomLevel - dragOffset.x);
+                dragNode.y = Math.max(0, e.clientY / zoomLevel - dragOffset.y);
+                var el = getZoomLayer().querySelector('[data-id="' + dragNode.id + '"]');
                 if (el) { el.style.left = dragNode.x + 'px'; el.style.top = dragNode.y + 'px'; }
                 drawConnections();
             });
 
             document.addEventListener('mouseup', function() {
                 if (dragNode) {
-                    var el = document.getElementById('orgCanvas').querySelector('[data-id="' + dragNode.id + '"]');
+                    var el = getZoomLayer().querySelector('[data-id="' + dragNode.id + '"]');
                     if (el) el.classList.remove('dragging');
                     dragNode = null;
                 }
@@ -301,20 +318,89 @@ if ($action === 'edit' && $orgId) {
 
             function drawConnections() {
                 var svg = document.getElementById('connectionsSvg');
-                var canvas = document.getElementById('orgCanvas');
                 svg.innerHTML = '';
+                // Tamaño dinámico según nodos
+                var maxX = 1000, maxY = 600;
+                nodes.forEach(function(n) {
+                    if ((n.x || 0) + NODE_W + 50 > maxX) maxX = (n.x || 0) + NODE_W + 50;
+                    if ((n.y || 0) + NODE_H + 50 > maxY) maxY = (n.y || 0) + NODE_H + 50;
+                });
+                svg.setAttribute('width', maxX);
+                svg.setAttribute('height', maxY);
+                svg.style.width = maxX + 'px';
+                svg.style.height = maxY + 'px';
+
                 connections.forEach(function(c) {
-                    var fromNode = nodes.find(n => n.id === c.from);
-                    var toNode = nodes.find(n => n.id === c.to);
+                    var fromNode = nodes.find(function(n) { return n.id === c.from; });
+                    var toNode = nodes.find(function(n) { return n.id === c.to; });
                     if (!fromNode || !toNode) return;
-                    var x1 = fromNode.x + 90, y1 = fromNode.y + 130;
-                    var x2 = toNode.x + 90, y2 = toNode.y;
+                    var x1 = (fromNode.x || 0) + NODE_W/2, y1 = (fromNode.y || 0) + NODE_H;
+                    var x2 = (toNode.x || 0) + NODE_W/2, y2 = (toNode.y || 0);
                     var midY = (y1 + y2) / 2;
                     var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                     path.setAttribute('d', 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + midY + ' ' + x2 + ',' + midY + ' ' + x2 + ',' + y2);
                     path.setAttribute('class', 'connection-line');
                     svg.appendChild(path);
                 });
+            }
+
+            // ====== ZOOM ======
+            function applyZoom() {
+                getZoomLayer().style.transform = 'scale(' + zoomLevel + ')';
+                document.getElementById('zoomIndicator').textContent = Math.round(zoomLevel * 100) + '%';
+            }
+            function zoomIn() { zoomLevel = Math.min(2.5, zoomLevel + 0.1); applyZoom(); }
+            function zoomOut() { zoomLevel = Math.max(0.3, zoomLevel - 0.1); applyZoom(); }
+            function zoomReset() { zoomLevel = 1; applyZoom(); }
+
+            // Zoom con rueda del ratón (Ctrl + wheel)
+            document.getElementById('orgCanvas').addEventListener('wheel', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    if (e.deltaY < 0) zoomIn(); else zoomOut();
+                }
+            }, { passive: false });
+
+            // ====== AUTO-LAYOUT JERÁRQUICO ======
+            function autoLayout(silent) {
+                if (nodes.length === 0) { if (!silent) alert('No hay nodos para organizar'); return; }
+                // Encontrar raíces (sin parent o parent inexistente)
+                var idSet = {}; nodes.forEach(function(n) { idSet[n.id] = true; });
+                var roots = nodes.filter(function(n) { return !n.parent || !idSet[n.parent]; });
+                if (roots.length === 0) roots = [nodes[0]];
+
+                // Función recursiva para calcular ancho del subárbol
+                function subtreeWidth(node) {
+                    var children = nodes.filter(function(c) { return c.parent === node.id; });
+                    if (children.length === 0) return NODE_W + GAP_X;
+                    var w = 0;
+                    children.forEach(function(c) { w += subtreeWidth(c); });
+                    return Math.max(NODE_W + GAP_X, w);
+                }
+
+                // Posicionar recursivamente
+                function placeNode(node, xStart, depth) {
+                    var children = nodes.filter(function(c) { return c.parent === node.id; });
+                    var totalW = subtreeWidth(node);
+                    node.x = xStart + (totalW - NODE_W) / 2;
+                    node.y = 50 + depth * (NODE_H + GAP_Y);
+                    var cx = xStart;
+                    children.forEach(function(c) {
+                        var cw = subtreeWidth(c);
+                        placeNode(c, cx, depth + 1);
+                        cx += cw;
+                    });
+                }
+
+                var x = 30;
+                roots.forEach(function(r) {
+                    var w = subtreeWidth(r);
+                    placeNode(r, x, 0);
+                    x += w + GAP_X * 2;
+                });
+
+                renderAll();
+                if (!silent) alert('Organigrama auto-organizado. Recuerda Guardar.');
             }
 
             // Agregar nodo
@@ -325,12 +411,13 @@ if ($action === 'edit' && $orgId) {
                 document.getElementById('nodeColor').value = '#1976D2';
                 document.getElementById('nodeEditId').value = '';
                 document.getElementById('nodePhotoFile').value = '';
+                document.getElementById('nodePhoto').value = '';
                 document.getElementById('nodePhotoPreview').style.display = 'none';
                 document.getElementById('nodeModal').style.display = 'flex';
             }
 
             function editNode(id) {
-                var n = nodes.find(x => x.id === id);
+                var n = nodes.find(function(x) { return x.id === id; });
                 if (!n) return;
                 document.getElementById('modalTitle').textContent = 'Editar Posición';
                 document.getElementById('nodeName').value = n.name;
@@ -338,6 +425,7 @@ if ($action === 'edit' && $orgId) {
                 document.getElementById('nodeColor').value = n.color || '#1976D2';
                 document.getElementById('nodeEditId').value = n.id;
                 document.getElementById('nodePhotoFile').value = n.photo || '';
+                document.getElementById('nodePhoto').value = '';
                 if (n.photo) {
                     document.getElementById('nodePhotoPreview').src = '../assets/uploads/company/' + n.photo;
                     document.getElementById('nodePhotoPreview').style.display = 'block';
@@ -366,12 +454,15 @@ if ($action === 'edit' && $orgId) {
                     var xhr = new XMLHttpRequest();
                     xhr.open('POST', 'organigrama_drag.php', false);
                     xhr.send(formData);
-                    var res = JSON.parse(xhr.responseText);
-                    if (res.success) photoFile = res.filename;
+                    try {
+                        var res = JSON.parse(xhr.responseText);
+                        if (res.success) photoFile = res.filename;
+                        else alert('Error subiendo foto: ' + (res.error || 'desconocido'));
+                    } catch(e) { alert('Error subiendo foto'); }
                 }
 
                 if (editId) {
-                    var n = nodes.find(x => x.id === editId);
+                    var n = nodes.find(function(x) { return x.id === editId; });
                     if (n) { n.name = name; n.puesto = puesto; n.color = color; if (photoFile) n.photo = photoFile; }
                 } else {
                     nodes.push({
@@ -392,8 +483,8 @@ if ($action === 'edit' && $orgId) {
 
             function deleteNode(id) {
                 if (!confirm('¿Eliminar esta posición?')) return;
-                nodes = nodes.filter(n => n.id !== id);
-                nodes.forEach(n => { if (n.parent === id) n.parent = null; });
+                nodes = nodes.filter(function(n) { return n.id !== id; });
+                nodes.forEach(function(n) { if (n.parent === id) n.parent = null; });
                 renderAll();
             }
 
@@ -413,7 +504,7 @@ if ($action === 'edit' && $orgId) {
 
             function finishConnect(id) {
                 if (connectFrom && connectFrom !== id) {
-                    var n = nodes.find(x => x.id === id);
+                    var n = nodes.find(function(x) { return x.id === id; });
                     if (n) n.parent = connectFrom;
                 }
                 connectFrom = null;
@@ -429,26 +520,27 @@ if ($action === 'edit' && $orgId) {
                 formData.append('org_id', orgId);
                 formData.append('nodes_json', JSON.stringify(nodes));
                 fetch('organigrama_drag.php', { method: 'POST', body: formData })
-                    .then(r => r.json())
-                    .then(d => { if (d.success) alert('Organigrama guardado correctamente'); });
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) { if (d.success) alert('Organigrama guardado correctamente'); });
             }
 
             // Exportar como imagen
             function exportImage() {
-                var canvas = document.getElementById('orgCanvas');
-                // Usar html2canvas si está disponible
+                var layer = getZoomLayer();
+                var prevTransform = layer.style.transform;
+                layer.style.transform = 'scale(1)';
                 if (typeof html2canvas !== 'undefined') {
-                    html2canvas(canvas).then(function(c) {
+                    html2canvas(layer, {backgroundColor: '#f0f2f5'}).then(function(c) {
+                        layer.style.transform = prevTransform;
                         var link = document.createElement('a');
                         link.download = 'organigrama.png';
                         link.href = c.toDataURL();
                         link.click();
                     });
                 } else {
-                    // Cargar html2canvas dinámicamente
                     var script = document.createElement('script');
                     script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
-                    script.onload = function() { exportImage(); };
+                    script.onload = function() { layer.style.transform = prevTransform; exportImage(); };
                     document.head.appendChild(script);
                 }
             }

@@ -99,6 +99,9 @@ $fotos = $pdo->query("SELECT g.*, d.nombre as dept_nombre FROM galeria_fotos g L
                 </div>
                 <div class="menu-section">
                     <a href="kpis.php"><i class="fas fa-chart-line"></i> <span>KPIs</span></a>
+                    <a href="organigrama_drag.php"><i class="fas fa-project-diagram"></i> <span>Organigramas (Drag&Drop)</span></a>
+                    <a href="organigrama_builder.php"><i class="fas fa-sitemap"></i> <span>Organigrama Jerárquico</span></a>
+                    <a href="organigrama.php"><i class="fas fa-image"></i> <span>Organigrama Imagen</span></a>
                     <a href="archivos.php"><i class="fas fa-folder"></i> <span>Archivos</span></a>
                     <a href="portales.php"><i class="fas fa-external-link-alt"></i> <span>Portales</span></a>
                     <a href="countdown.php"><i class="fas fa-hourglass-half"></i> <span>Cuenta Regresiva</span></a>

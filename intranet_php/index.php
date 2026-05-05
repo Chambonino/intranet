@@ -190,6 +190,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                         <?php if ($organigrama): ?>
                         <a href="javascript:void(0)" onclick="openImageModal('assets/uploads/company/<?php echo $organigrama['imagen']; ?>','Organigrama Corporativo')" class="app-card" style="background:#E53935;"><i class="fas fa-sitemap"></i><span>Organigrama</span></a>
                         <?php endif; ?>
+                        <a href="organigramas.php" class="app-card" style="background:#3F51B5;" data-testid="app-organigramas-link"><i class="fas fa-project-diagram"></i><span>Organigramas</span></a>
                         <?php foreach ($aplicaciones as $app): ?>
                         <a href="<?php echo htmlspecialchars($app['url']); ?>" target="_blank" class="app-card" style="background:<?php echo $app['color']; ?>;"><i class="fas <?php echo $app['icono']; ?>"></i><span><?php echo htmlspecialchars($app['nombre']); ?></span></a>
                     <?php endforeach; ?></div>
