@@ -249,20 +249,54 @@ if ($verId) {
 
             function vExportImage() {
                 var layer = document.getElementById('vLayer');
-                var prev = layer.style.transform;
+                var prevTransform = layer.style.transform;
+                var prevWidth = layer.style.width;
+                var prevHeight = layer.style.height;
+
+                // Calcular bounding box
+                var maxX = 800, maxY = 600;
+                vNodes.forEach(function(n) {
+                    if ((n.x || 0) + V_NODE_W + 40 > maxX) maxX = (n.x || 0) + V_NODE_W + 40;
+                    if ((n.y || 0) + V_NODE_H + 40 > maxY) maxY = (n.y || 0) + V_NODE_H + 40;
+                });
+                vLevels.forEach(function(l) { if (l.y + 40 > maxY) maxY = l.y + 40; });
+
                 layer.style.transform = 'scale(1)';
-                if (typeof html2canvas !== 'undefined') {
-                    html2canvas(layer, {backgroundColor: '#ffffff'}).then(function(c) {
-                        layer.style.transform = prev;
+                layer.style.width = maxX + 'px';
+                layer.style.height = maxY + 'px';
+
+                function restore() {
+                    layer.style.transform = prevTransform;
+                    layer.style.width = prevWidth;
+                    layer.style.height = prevHeight;
+                }
+
+                function run() {
+                    html2canvas(layer, {
+                        backgroundColor: '#ffffff',
+                        width: maxX,
+                        height: maxY,
+                        windowWidth: maxX,
+                        windowHeight: maxY,
+                        scale: 2,
+                        useCORS: true
+                    }).then(function(c) {
+                        restore();
                         var link = document.createElement('a');
                         link.download = 'organigrama_<?php echo preg_replace('/[^a-z0-9]/i','_', $current['titulo']); ?>.png';
-                        link.href = c.toDataURL();
+                        link.href = c.toDataURL('image/png');
                         link.click();
+                    }).catch(function(err) {
+                        restore();
+                        alert('Error exportando: ' + err);
                     });
-                } else {
+                }
+
+                if (typeof html2canvas !== 'undefined') run();
+                else {
                     var s = document.createElement('script');
                     s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
-                    s.onload = function() { layer.style.transform = prev; vExportImage(); };
+                    s.onload = run;
                     document.head.appendChild(s);
                 }
             }

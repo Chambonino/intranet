@@ -1,4 +1,55 @@
-php_value upload_max_filesize 100M
-php_value post_max_size 100M
-php_value max_execution_time 300
-php_value max_input_time 300
+# =====================================================================
+# Intranet Corporativa - Configuración Apache (.htaccess)
+# =====================================================================
+# Permite subir archivos de hasta 500 MB (videos, etc.).
+# Si XAMPP en Windows NO respeta estos valores (suele pasar porque
+# Apache puede estar configurado con AllowOverride None), edita también:
+#
+#     C:\xampp\php\php.ini
+#
+# y modifica/agrega estas líneas:
+#
+#     upload_max_filesize = 500M
+#     post_max_size       = 550M
+#     memory_limit        = 512M
+#     max_execution_time  = 600
+#     max_input_time      = 600
+#
+# Después reinicia Apache desde el panel de XAMPP.
+# Para que .htaccess funcione, en C:\xampp\apache\conf\httpd.conf
+# busca el bloque <Directory "C:/xampp/htdocs"> y asegúrate de que
+# diga: AllowOverride All
+# =====================================================================
+
+# Estos valores funcionan cuando PHP corre como módulo Apache (mod_php)
+<IfModule mod_php.c>
+    php_value upload_max_filesize 500M
+    php_value post_max_size       550M
+    php_value memory_limit        512M
+    php_value max_execution_time  600
+    php_value max_input_time      600
+</IfModule>
+<IfModule mod_php7.c>
+    php_value upload_max_filesize 500M
+    php_value post_max_size       550M
+    php_value memory_limit        512M
+    php_value max_execution_time  600
+    php_value max_input_time      600
+</IfModule>
+<IfModule mod_php8.c>
+    php_value upload_max_filesize 500M
+    php_value post_max_size       550M
+    php_value memory_limit        512M
+    php_value max_execution_time  600
+    php_value max_input_time      600
+</IfModule>
+
+# Charset por defecto
+AddDefaultCharset UTF-8
+
+# Bloquear acceso directo a archivos sensibles
+<FilesMatch "\.(sql|md|log|env)$">
+    Require all denied
+</FilesMatch>
+
+DirectoryIndex index.php index.html

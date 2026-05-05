@@ -665,21 +665,57 @@ if ($action === 'edit' && $orgId) {
             function exportImage() {
                 var layer = getZoomLayer();
                 var prevTransform = layer.style.transform;
+                var prevWidth = layer.style.width;
+                var prevHeight = layer.style.height;
+
+                // Calcular bounding box real de todo el contenido
+                var maxX = 800, maxY = 600;
+                nodes.forEach(function(n) {
+                    if ((n.x || 0) + NODE_W + 40 > maxX) maxX = (n.x || 0) + NODE_W + 40;
+                    if ((n.y || 0) + NODE_H + 40 > maxY) maxY = (n.y || 0) + NODE_H + 40;
+                });
+                levels.forEach(function(l) { if (l.y + 40 > maxY) maxY = l.y + 40; });
+
+                // Reset zoom + fijar tamaño absoluto del layer para que html2canvas capture todo
                 layer.style.transform = 'scale(1)';
+                layer.style.width = maxX + 'px';
+                layer.style.height = maxY + 'px';
                 layer.querySelectorAll('.level-handle').forEach(function(h) { h.style.visibility = 'hidden'; });
-                if (typeof html2canvas !== 'undefined') {
-                    html2canvas(layer, {backgroundColor: '#ffffff'}).then(function(c) {
-                        layer.style.transform = prevTransform;
-                        layer.querySelectorAll('.level-handle').forEach(function(h) { h.style.visibility = ''; });
+
+                function restore() {
+                    layer.style.transform = prevTransform;
+                    layer.style.width = prevWidth;
+                    layer.style.height = prevHeight;
+                    layer.querySelectorAll('.level-handle').forEach(function(h) { h.style.visibility = ''; });
+                }
+
+                function run() {
+                    html2canvas(layer, {
+                        backgroundColor: '#ffffff',
+                        width: maxX,
+                        height: maxY,
+                        windowWidth: maxX,
+                        windowHeight: maxY,
+                        scale: 2,
+                        useCORS: true
+                    }).then(function(c) {
+                        restore();
                         var link = document.createElement('a');
                         link.download = 'organigrama.png';
-                        link.href = c.toDataURL();
+                        link.href = c.toDataURL('image/png');
                         link.click();
+                    }).catch(function(err) {
+                        restore();
+                        alert('Error exportando imagen: ' + err);
                     });
+                }
+
+                if (typeof html2canvas !== 'undefined') {
+                    run();
                 } else {
                     var script = document.createElement('script');
                     script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
-                    script.onload = function() { layer.style.transform = prevTransform; exportImage(); };
+                    script.onload = run;
                     document.head.appendChild(script);
                 }
             }

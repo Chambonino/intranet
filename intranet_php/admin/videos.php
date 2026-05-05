@@ -159,8 +159,20 @@ $videos = $pdo->query("SELECT * FROM videos ORDER BY orden ASC, id DESC")->fetch
                         
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Archivo de Video <?php echo $action === 'add' ? '*' : ''; ?> (mp4, webm, ogg)</label>
+                                <label>Archivo de Video <?php echo $action === 'add' ? '*' : ''; ?> (mp4, webm, ogg, mov, avi)</label>
                                 <input type="file" name="archivo_video" accept="video/*" <?php echo $action === 'add' ? 'required' : ''; ?>>
+                                <?php
+                                $umf = ini_get('upload_max_filesize');
+                                $pms = ini_get('post_max_size');
+                                $met = ini_get('max_execution_time');
+                                ?>
+                                <p style="margin-top:8px;font-size:0.78rem;color:#888;">
+                                    <i class="fas fa-info-circle"></i> Tamaño máximo actual del servidor: <strong><?php echo $umf; ?></strong>
+                                    (POST: <?php echo $pms; ?>, timeout: <?php echo $met; ?>s).
+                                    <?php if ((int)$umf < 300): ?>
+                                    <br><span style="color:#d32f2f;"><i class="fas fa-exclamation-triangle"></i> El límite es muy bajo para videos de 300 MB. Edita <code>C:\xampp\php\php.ini</code> y reinicia Apache (instrucciones en <code>.htaccess</code>).</span>
+                                    <?php endif; ?>
+                                </p>
                                 <?php if ($editData && $editData['archivo_video']): ?>
                                 <p style="margin-top: 10px; color: #666;"><i class="fas fa-file-video"></i> Archivo actual: <?php echo $editData['archivo_video']; ?></p>
                                 <?php endif; ?>
