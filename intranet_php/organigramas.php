@@ -56,32 +56,37 @@ if ($verId) {
         .org-viewer-canvas {
             position: relative;
             min-height: 600px;
-            background: #f6f8fa;
+            background: #ffffff;
             border-radius: 14px;
             overflow: auto;
             border: 1px solid rgba(255,255,255,0.08);
         }
         .org-viewer-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform-origin: 0 0; }
 
+        /* Tarjeta estilo Visio (idéntica al editor) */
         .v-node-card {
             position: absolute;
-            width: 180px;
-            background: white;
-            border-radius: 14px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+            width: 200px;
             user-select: none;
-            border-top: 4px solid #1976d2;
             z-index: 10;
-            transition: transform 0.25s, box-shadow 0.25s;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+            transition: filter 0.25s, transform 0.25s;
         }
-        .v-node-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.22); z-index: 20; }
-        .v-node-card .vn-photo { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 3px solid #eee; margin: 15px auto 8px; display: block; }
-        .v-node-card .vn-initials { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 15px auto 8px; color: white; font-weight: 800; font-size: 1.15rem; }
-        .v-node-card .vn-name { text-align: center; font-weight: 700; font-size: 0.85rem; color: #333; padding: 0 10px; }
-        .v-node-card .vn-puesto { text-align: center; font-size: 0.72rem; color: #888; padding: 2px 10px 12px; }
+        .v-node-card:hover { filter: drop-shadow(0 6px 14px rgba(25,118,210,0.35)); transform: translateY(-2px); z-index: 20; }
+        .v-node-card .vh { display: flex; align-items: stretch; background: #d9d9d9; border: 1px solid #b0b0b0; border-bottom: none; min-height: 70px; }
+        .v-node-card .vh-photo { width: 60px; background: #e8e8e8; display: flex; align-items: center; justify-content: center; border-right: 1px solid #b0b0b0; }
+        .v-node-card .vh-photo img { width: 44px; height: 44px; border-radius: 4px; object-fit: cover; }
+        .v-node-card .vh-photo .vh-ini { width: 44px; height: 44px; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.95rem; }
+        .v-node-card .vh-puesto { flex: 1; background: #2e75b6; color: white; padding: 8px 10px; font-size: 0.78rem; font-weight: 500; line-height: 1.25; display: flex; align-items: center; }
+        .v-node-card .vn-name { background: white; border: 1px solid #b0b0b0; border-top: none; padding: 8px 12px; text-align: center; font-size: 0.82rem; color: #1a1a1a; font-weight: 500; }
+        .v-node-card .vn-ribbon { background: #2e75b6; height: 10px; margin: 0 18px; border-radius: 0 0 4px 4px; border: 1px solid #1c5a90; border-top: none; }
 
-        .v-connections-svg { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 5; }
-        .v-connection-line { stroke: #90a4ae; stroke-width: 2; fill: none; }
+        .v-connections-svg, .v-levels-svg { position: absolute; top: 0; left: 0; pointer-events: none; }
+        .v-connections-svg { z-index: 5; }
+        .v-levels-svg { z-index: 4; }
+        .v-connection-line { stroke: #2e75b6; stroke-width: 1.6; fill: none; }
+        .v-level-line { stroke: #333; stroke-width: 1.2; stroke-dasharray: 8 6; fill: none; }
+        .v-level-label { font: 600 12px sans-serif; fill: #333; }
 
         .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); background: var(--bg-card); border-radius: 14px; }
         .empty-state i { font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 15px; }
@@ -116,15 +121,19 @@ if ($verId) {
 
             <div class="org-viewer-canvas" id="vCanvas">
                 <div class="org-viewer-layer" id="vLayer">
+                    <svg class="v-levels-svg" id="vLevelsSvg"></svg>
                     <svg class="v-connections-svg" id="vSvg"></svg>
                 </div>
                 <div class="zoom-pill" id="vZoomPill">100%</div>
             </div>
 
             <script>
-            var vNodes = <?php echo $current['datos_json'] ?: '[]'; ?>;
+            var vRaw = <?php echo $current['datos_json'] ?: '[]'; ?>;
+            var vNodes, vLevels;
+            if (Array.isArray(vRaw)) { vNodes = vRaw; vLevels = []; }
+            else { vNodes = vRaw.nodes || []; vLevels = vRaw.levels || []; }
             var vZoom = 1;
-            var V_NODE_W = 180, V_NODE_H = 145;
+            var V_NODE_W = 200, V_NODE_H = 132;
 
             function vRender() {
                 var layer = document.getElementById('vLayer');
@@ -134,32 +143,42 @@ if ($verId) {
                     el.className = 'v-node-card';
                     el.style.left = (n.x || 0) + 'px';
                     el.style.top = (n.y || 0) + 'px';
-                    el.style.borderTopColor = n.color || '#1976d2';
+                    var accent = n.color || '#2e75b6';
 
                     var photoHtml = '';
                     if (n.photo) {
-                        photoHtml = '<img src="assets/uploads/company/' + n.photo + '" class="vn-photo">';
+                        photoHtml = '<img src="assets/uploads/company/' + n.photo + '">';
                     } else {
                         var ini = (n.name || 'NN').split(' ').map(function(s) { return s[0]; }).join('').substring(0,2).toUpperCase();
-                        photoHtml = '<div class="vn-initials" style="background:' + (n.color||'#1976d2') + ';">' + ini + '</div>';
+                        photoHtml = '<div class="vh-ini" style="background:' + accent + ';">' + ini + '</div>';
                     }
 
-                    el.innerHTML = photoHtml +
+                    el.innerHTML =
+                        '<div class="vh">' +
+                            '<div class="vh-photo">' + photoHtml + '</div>' +
+                            '<div class="vh-puesto" style="background:' + accent + ';">' + (n.puesto || '') + '</div>' +
+                        '</div>' +
                         '<div class="vn-name">' + (n.name || '') + '</div>' +
-                        '<div class="vn-puesto">' + (n.puesto || '') + '</div>';
+                        '<div class="vn-ribbon" style="background:' + accent + ';"></div>';
                     layer.appendChild(el);
                 });
                 vDrawConnections();
+                vDrawLevels();
             }
 
             function vDrawConnections() {
                 var svg = document.getElementById('vSvg');
                 svg.innerHTML = '';
-                var maxX = 1000, maxY = 600;
+                var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                defs.innerHTML = '<marker id="varrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2e75b6"/></marker>';
+                svg.appendChild(defs);
+
+                var maxX = 1200, maxY = 700;
                 vNodes.forEach(function(n) {
-                    if ((n.x || 0) + V_NODE_W + 50 > maxX) maxX = (n.x || 0) + V_NODE_W + 50;
-                    if ((n.y || 0) + V_NODE_H + 50 > maxY) maxY = (n.y || 0) + V_NODE_H + 50;
+                    if ((n.x || 0) + V_NODE_W + 80 > maxX) maxX = (n.x || 0) + V_NODE_W + 80;
+                    if ((n.y || 0) + V_NODE_H + 80 > maxY) maxY = (n.y || 0) + V_NODE_H + 80;
                 });
+                vLevels.forEach(function(l) { if (l.y + 50 > maxY) maxY = l.y + 50; });
                 svg.setAttribute('width', maxX);
                 svg.setAttribute('height', maxY);
                 svg.style.width = maxX + 'px';
@@ -169,13 +188,50 @@ if ($verId) {
                     if (!n.parent) return;
                     var p = vNodes.find(function(x) { return x.id === n.parent; });
                     if (!p) return;
-                    var x1 = (p.x || 0) + V_NODE_W/2, y1 = (p.y || 0) + V_NODE_H;
-                    var x2 = (n.x || 0) + V_NODE_W/2, y2 = (n.y || 0);
-                    var midY = (y1 + y2) / 2;
                     var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                    path.setAttribute('d', 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + midY + ' ' + x2 + ',' + midY + ' ' + x2 + ',' + y2);
+                    var d;
+                    if (n.lateral) {
+                        var x1 = (p.x || 0) + V_NODE_W;
+                        var y1 = (p.y || 0) + V_NODE_H/2;
+                        var x2 = (n.x || 0);
+                        var y2 = (n.y || 0) + V_NODE_H/2;
+                        var midX = (x1 + x2) / 2;
+                        d = 'M' + x1 + ',' + y1 + ' L' + midX + ',' + y1 + ' L' + midX + ',' + y2 + ' L' + x2 + ',' + y2;
+                    } else {
+                        var px = (p.x || 0) + V_NODE_W/2;
+                        var py = (p.y || 0) + V_NODE_H;
+                        var cx = (n.x || 0) + V_NODE_W/2;
+                        var cy = (n.y || 0);
+                        var midY = (py + cy) / 2;
+                        d = 'M' + px + ',' + py + ' L' + px + ',' + midY + ' L' + cx + ',' + midY + ' L' + cx + ',' + cy;
+                    }
+                    path.setAttribute('d', d);
                     path.setAttribute('class', 'v-connection-line');
+                    path.setAttribute('marker-end', 'url(#varrow)');
                     svg.appendChild(path);
+                });
+            }
+
+            function vDrawLevels() {
+                var svg = document.getElementById('vLevelsSvg');
+                svg.innerHTML = '';
+                var maxX = 1200;
+                vNodes.forEach(function(n) { if ((n.x || 0) + V_NODE_W + 80 > maxX) maxX = (n.x || 0) + V_NODE_W + 80; });
+                svg.setAttribute('width', maxX);
+                svg.setAttribute('height', 2000);
+                svg.style.width = maxX + 'px';
+                vLevels.forEach(function(lv) {
+                    var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', 0); line.setAttribute('x2', maxX);
+                    line.setAttribute('y1', lv.y); line.setAttribute('y2', lv.y);
+                    line.setAttribute('class', 'v-level-line');
+                    svg.appendChild(line);
+                    var text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', maxX/2); text.setAttribute('y', lv.y - 6);
+                    text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('class', 'v-level-label');
+                    text.textContent = lv.label;
+                    svg.appendChild(text);
                 });
             }
 
@@ -188,10 +244,7 @@ if ($verId) {
             function vZoomReset() { vZoom = 1; vApplyZoom(); }
 
             document.getElementById('vCanvas').addEventListener('wheel', function(e) {
-                if (e.ctrlKey || e.metaKey) {
-                    e.preventDefault();
-                    if (e.deltaY < 0) vZoomIn(); else vZoomOut();
-                }
+                if (e.ctrlKey || e.metaKey) { e.preventDefault(); if (e.deltaY < 0) vZoomIn(); else vZoomOut(); }
             }, { passive: false });
 
             function vExportImage() {
@@ -199,7 +252,7 @@ if ($verId) {
                 var prev = layer.style.transform;
                 layer.style.transform = 'scale(1)';
                 if (typeof html2canvas !== 'undefined') {
-                    html2canvas(layer, {backgroundColor: '#f6f8fa'}).then(function(c) {
+                    html2canvas(layer, {backgroundColor: '#ffffff'}).then(function(c) {
                         layer.style.transform = prev;
                         var link = document.createElement('a');
                         link.download = 'organigrama_<?php echo preg_replace('/[^a-z0-9]/i','_', $current['titulo']); ?>.png';
@@ -228,7 +281,7 @@ if ($verId) {
                     $colores = ['#1976D2','#E53935','#43A047','#FF9800','#9C27B0','#00BCD4','#E91E63','#3F51B5'];
                     foreach ($organigramas as $i => $org):
                         $datos = json_decode($org['datos_json'] ?: '[]', true);
-                        $numNodos = is_array($datos) ? count($datos) : 0;
+                        $numNodos = is_array($datos) ? (isset($datos['nodes']) ? count($datos['nodes']) : count($datos)) : 0;
                         $color = $colores[$i % count($colores)];
                     ?>
                     <a href="organigramas.php?id=<?php echo $org['id']; ?>" class="pub-org-card" style="border-left-color: <?php echo $color; ?>;" data-testid="org-card-<?php echo $org['id']; ?>">

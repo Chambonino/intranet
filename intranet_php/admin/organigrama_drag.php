@@ -83,40 +83,108 @@ if ($action === 'edit' && $orgId) {
     <link rel="stylesheet" href="../assets/css/admin.css">
     <style>
         /* Canvas del organigrama */
-        .org-canvas { position: relative; min-height: 600px; background: #f0f2f5; border-radius: 12px; overflow: auto; border: 2px dashed #ddd; }
-        .org-canvas.drag-over { border-color: #1976d2; background: #e3f2fd; }
+        .org-canvas { position: relative; min-height: 600px; background: #ffffff; border-radius: 12px; overflow: auto; border: 2px dashed #ddd; }
+        .org-canvas.drag-over { border-color: #1976d2; background: #f5f9ff; }
         
-        /* Nodo del organigrama */
+        /* === Nodo estilo Visio corporativo === */
         .org-node-card {
             position: absolute;
-            width: 180px;
-            background: white;
-            border-radius: 14px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 200px;
             cursor: move;
             user-select: none;
-            transition: box-shadow 0.3s;
-            border-top: 4px solid #1976d2;
+            transition: filter 0.25s, transform 0.25s;
             z-index: 10;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
         }
-        .org-node-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.18); z-index: 20; }
-        .org-node-card.dragging { opacity: 0.7; box-shadow: 0 15px 40px rgba(0,0,0,0.25); z-index: 100; }
-        .org-node-card .node-photo { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 3px solid #eee; margin: 15px auto 8px; display: block; }
-        .org-node-card .node-initials { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 15px auto 8px; color: white; font-weight: 800; font-size: 1.2rem; }
-        .org-node-card .node-name { text-align: center; font-weight: 700; font-size: 0.85rem; color: #333; padding: 0 10px; }
-        .org-node-card .node-puesto { text-align: center; font-size: 0.72rem; color: #888; padding: 2px 10px 12px; }
-        .org-node-card .node-toolbar { display: none; position: absolute; top: -12px; right: -8px; background: white; border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.15); padding: 4px; }
+        .org-node-card:hover { filter: drop-shadow(0 6px 14px rgba(25,118,210,0.35)); z-index: 20; transform: translateY(-2px); }
+        .org-node-card.dragging { opacity: 0.85; z-index: 100; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.4)); }
+
+        /* Cabecera (gris con foto + puesto) */
+        .org-node-card .node-header {
+            display: flex;
+            align-items: stretch;
+            background: #d9d9d9;
+            border: 1px solid #b0b0b0;
+            border-bottom: none;
+            min-height: 70px;
+        }
+        .org-node-card .node-photo-wrap {
+            width: 60px;
+            background: #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-right: 1px solid #b0b0b0;
+        }
+        .org-node-card .node-photo { width: 44px; height: 44px; border-radius: 4px; object-fit: cover; }
+        .org-node-card .node-initials { width: 44px; height: 44px; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.95rem; }
+        .org-node-card .node-puesto-block {
+            flex: 1;
+            background: #2e75b6;
+            color: white;
+            padding: 8px 10px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            line-height: 1.25;
+            display: flex;
+            align-items: center;
+            text-align: left;
+        }
+
+        /* Cuerpo (nombre) */
+        .org-node-card .node-name-block {
+            background: white;
+            border: 1px solid #b0b0b0;
+            border-top: none;
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 0.82rem;
+            color: #1a1a1a;
+            font-weight: 500;
+        }
+
+        /* Pestaña inferior decorativa */
+        .org-node-card .node-ribbon {
+            background: #2e75b6;
+            height: 10px;
+            margin: 0 18px;
+            border-radius: 0 0 4px 4px;
+            border: 1px solid #1c5a90;
+            border-top: none;
+        }
+
+        /* Toolbar flotante */
+        .org-node-card .node-toolbar { display: none; position: absolute; top: -14px; right: -10px; background: white; border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.15); padding: 4px; z-index: 30; }
         .org-node-card:hover .node-toolbar { display: flex; gap: 2px; }
         .node-tool-btn { width: 26px; height: 26px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; transition: all 0.2s; }
         .node-tool-btn.edit { background: #e3f2fd; color: #1976d2; }
         .node-tool-btn.delete { background: #ffebee; color: #e53935; }
         .node-tool-btn.connect { background: #e8f5e9; color: #43a047; }
+        .node-tool-btn.lateral { background: #fff3e0; color: #f57c00; }
         .node-tool-btn:hover { transform: scale(1.15); }
+
+        /* Indicador "lateral" */
+        .org-node-card.is-lateral .node-puesto-block::before {
+            content: '\f061';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            margin-right: 6px;
+            opacity: 0.7;
+            font-size: 0.7rem;
+        }
         
-        /* Conexiones SVG */
-        .connections-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
-        .connection-line { stroke: #90a4ae; stroke-width: 2; fill: none; }
-        
+        /* === Conexiones SVG === */
+        .connections-svg { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 5; }
+        .connection-line { stroke: #2e75b6; stroke-width: 1.6; fill: none; }
+        .connection-line.lateral-line { stroke: #1c5a90; stroke-dasharray: 0; }
+
+        /* Separadores de nivel */
+        .level-separator-svg { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 4; }
+        .level-line { stroke: #333; stroke-width: 1.2; stroke-dasharray: 8 6; fill: none; }
+        .level-label { font: 600 12px sans-serif; fill: #333; }
+        .level-handle { position: absolute; right: 8px; transform: translateY(-50%); background: #fff; border: 1px solid #ccc; border-radius: 6px; padding: 4px 8px; font-size: 0.7rem; cursor: pointer; z-index: 6; display: none; }
+        .level-handle:hover { background: #fee; color: #c00; }
+
         /* Toolbar lateral */
         .org-toolbar { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 3px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
         .org-toolbar-title { font-size: 0.85rem; font-weight: 700; color: #333; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
@@ -136,6 +204,8 @@ if ($action === 'edit' && $orgId) {
         .node-form-group label { display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px; font-weight: 500; }
         .node-form-group input, .node-form-group select { width: 100%; padding: 10px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 0.9rem; }
         .node-form-group input:focus { outline: none; border-color: #1976d2; }
+        .node-form-group label.cb { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .node-form-group label.cb input { width: auto; }
         
         /* Grid de organigramas */
         .org-list-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
@@ -188,6 +258,7 @@ if ($action === 'edit' && $orgId) {
                 <div class="org-toolbar-title"><i class="fas fa-project-diagram" style="color:#1976d2;"></i> <?php echo htmlspecialchars($currentOrg['titulo']); ?> <span style="font-weight:400;color:#888;font-size:0.8rem;">— <?php echo htmlspecialchars($currentOrg['departamento'] ?: 'General'); ?></span></div>
                 <div class="org-toolbar-actions">
                     <button class="org-tool-btn primary" onclick="addNode()"><i class="fas fa-plus"></i> Agregar Posición</button>
+                    <button class="org-tool-btn" onclick="addLevel()"><i class="fas fa-grip-lines"></i> Agregar Separador</button>
                     <button class="org-tool-btn" onclick="connectMode()"><i class="fas fa-link"></i> Conectar</button>
                     <button class="org-tool-btn" onclick="autoLayout()"><i class="fas fa-magic"></i> Auto-organizar</button>
                     <button class="org-tool-btn" onclick="zoomIn()"><i class="fas fa-search-plus"></i></button>
@@ -200,6 +271,7 @@ if ($action === 'edit' && $orgId) {
             </div>
             <div class="org-canvas" id="orgCanvas">
                 <div class="org-zoom-layer" id="orgZoomLayer" style="position:absolute;top:0;left:0;width:100%;height:100%;transform-origin:0 0;">
+                    <svg class="level-separator-svg" id="levelsSvg"></svg>
                     <svg class="connections-svg" id="connectionsSvg"></svg>
                 </div>
                 <div id="zoomIndicator" style="position:absolute;bottom:10px;right:14px;background:rgba(25,118,210,0.85);color:white;padding:6px 12px;border-radius:20px;font-size:0.75rem;font-weight:600;z-index:200;pointer-events:none;">100%</div>
@@ -213,6 +285,7 @@ if ($action === 'edit' && $orgId) {
                     <div class="node-form-group"><label>Puesto *</label><input type="text" id="nodePuesto" placeholder="Director General"></div>
                     <div class="node-form-group"><label>Color</label><input type="color" id="nodeColor" value="#1976D2" style="width:60px;height:38px;padding:2px;"></div>
                     <div class="node-form-group"><label>Foto</label><input type="file" id="nodePhoto" accept="image/*"><img id="nodePhotoPreview" style="width:50px;height:50px;border-radius:50%;object-fit:cover;margin-top:8px;display:none;"></div>
+                    <div class="node-form-group"><label class="cb"><input type="checkbox" id="nodeLateral"> Posición lateral (asistente al lado del jefe, no debajo)</label></div>
                     <input type="hidden" id="nodeEditId" value="">
                     <input type="hidden" id="nodePhotoFile" value="">
                     <div style="display:flex;gap:10px;margin-top:20px;">
@@ -225,18 +298,21 @@ if ($action === 'edit' && $orgId) {
             <script>
             // Datos del organigrama
             var orgId = <?php echo $currentOrg['id']; ?>;
-            var nodes = <?php echo $currentOrg['datos_json'] ?: '[]'; ?>;
+            var rawData = <?php echo $currentOrg['datos_json'] ?: '[]'; ?>;
+            // Compatibilidad: si es array antiguo => migrar a formato {nodes, levels}
+            var nodes, levels;
+            if (Array.isArray(rawData)) { nodes = rawData; levels = []; }
+            else { nodes = rawData.nodes || []; levels = rawData.levels || []; }
             var connections = [];
             var isConnecting = false;
             var connectFrom = null;
             var dragNode = null;
+            var dragLevel = null;
             var dragOffset = {x:0, y:0};
             var zoomLevel = 1;
-            var NODE_W = 180, NODE_H = 145, GAP_X = 30, GAP_Y = 60;
+            var NODE_W = 200, NODE_H = 132, GAP_X = 30, GAP_Y = 70, LATERAL_GAP = 30;
 
-            // Inicializar
             window.onload = function() {
-                // Si no hay nodos posicionados, aplicar auto-layout
                 var unpositioned = nodes.filter(function(n) { return n.x === undefined || n.x === null; });
                 if (unpositioned.length > 0 && nodes.length > 0) autoLayout(true);
                 renderAll();
@@ -246,46 +322,45 @@ if ($action === 'edit' && $orgId) {
 
             function renderAll() {
                 var layer = getZoomLayer();
-                // Limpiar solo nodos (no SVG)
-                layer.querySelectorAll('.org-node-card').forEach(function(n) { n.remove(); });
-                
-                // Extraer conexiones de parent
-                connections = [];
-                nodes.forEach(function(n) {
-                    if (n.parent) connections.push({from: n.parent, to: n.id});
-                });
+                layer.querySelectorAll('.org-node-card, .level-handle').forEach(function(n) { n.remove(); });
 
-                // Renderizar nodos
+                connections = [];
+                nodes.forEach(function(n) { if (n.parent) connections.push({from: n.parent, to: n.id, lateral: !!n.lateral}); });
+
                 nodes.forEach(function(n) {
                     var el = document.createElement('div');
-                    el.className = 'org-node-card';
+                    el.className = 'org-node-card' + (n.lateral ? ' is-lateral' : '');
                     el.dataset.id = n.id;
                     el.style.left = (n.x || 50) + 'px';
                     el.style.top = (n.y || 50) + 'px';
-                    el.style.borderTopColor = n.color || '#1976d2';
+                    var accent = n.color || '#2e75b6';
 
                     var photoHtml = '';
                     if (n.photo) {
                         photoHtml = '<img src="../assets/uploads/company/' + n.photo + '" class="node-photo">';
                     } else {
                         var ini = (n.name || 'NN').split(' ').map(function(s) { return s[0]; }).join('').substring(0,2).toUpperCase();
-                        photoHtml = '<div class="node-initials" style="background:' + (n.color||'#1976d2') + ';">' + ini + '</div>';
+                        photoHtml = '<div class="node-initials" style="background:' + accent + ';">' + ini + '</div>';
                     }
 
-                    el.innerHTML = '<div class="node-toolbar">' +
-                        '<button class="node-tool-btn connect" onclick="startConnect(\'' + n.id + '\')" title="Conectar"><i class="fas fa-link"></i></button>' +
-                        '<button class="node-tool-btn edit" onclick="editNode(\'' + n.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
-                        '<button class="node-tool-btn delete" onclick="deleteNode(\'' + n.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' +
-                        '</div>' + photoHtml +
-                        '<div class="node-name">' + (n.name || '') + '</div>' +
-                        '<div class="node-puesto">' + (n.puesto || '') + '</div>';
+                    el.innerHTML =
+                        '<div class="node-toolbar">' +
+                            '<button class="node-tool-btn connect" onclick="startConnect(\'' + n.id + '\')" title="Conectar"><i class="fas fa-link"></i></button>' +
+                            '<button class="node-tool-btn lateral" onclick="toggleLateral(\'' + n.id + '\')" title="Marcar como lateral"><i class="fas fa-arrow-right"></i></button>' +
+                            '<button class="node-tool-btn edit" onclick="editNode(\'' + n.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                            '<button class="node-tool-btn delete" onclick="deleteNode(\'' + n.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' +
+                        '</div>' +
+                        '<div class="node-header">' +
+                            '<div class="node-photo-wrap">' + photoHtml + '</div>' +
+                            '<div class="node-puesto-block" style="background:' + accent + ';">' + (n.puesto || '') + '</div>' +
+                        '</div>' +
+                        '<div class="node-name-block">' + (n.name || '') + '</div>' +
+                        '<div class="node-ribbon" style="background:' + accent + ';"></div>';
 
-                    // Drag events
                     el.addEventListener('mousedown', function(e) {
                         if (e.target.closest('.node-toolbar')) return;
                         if (isConnecting) { finishConnect(n.id); return; }
                         dragNode = n;
-                        // Coordenadas en espacio de canvas (sin zoom)
                         dragOffset.x = e.clientX / zoomLevel - (n.x || 0);
                         dragOffset.y = e.clientY / zoomLevel - (n.y || 0);
                         el.classList.add('dragging');
@@ -295,10 +370,21 @@ if ($action === 'edit' && $orgId) {
                     layer.appendChild(el);
                 });
 
+                // Renderizar handles de niveles
+                levels.forEach(function(lv, idx) {
+                    var handle = document.createElement('div');
+                    handle.className = 'level-handle';
+                    handle.style.top = lv.y + 'px';
+                    handle.style.display = 'block';
+                    handle.innerHTML = '<i class="fas fa-times"></i> Quitar';
+                    handle.onclick = function() { if (confirm('¿Eliminar el separador "' + lv.label + '"?')) { levels.splice(idx, 1); renderAll(); } };
+                    layer.appendChild(handle);
+                });
+
                 drawConnections();
+                drawLevels();
             }
 
-            // Mouse move y up global para drag (compensa zoom)
             document.addEventListener('mousemove', function(e) {
                 if (!dragNode) return;
                 dragNode.x = Math.max(0, e.clientX / zoomLevel - dragOffset.x);
@@ -319,28 +405,74 @@ if ($action === 'edit' && $orgId) {
             function drawConnections() {
                 var svg = document.getElementById('connectionsSvg');
                 svg.innerHTML = '';
-                // Tamaño dinámico según nodos
-                var maxX = 1000, maxY = 600;
+                // marker arrow
+                var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                defs.innerHTML = '<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2e75b6"/></marker>';
+                svg.appendChild(defs);
+
+                var maxX = 1200, maxY = 700;
                 nodes.forEach(function(n) {
-                    if ((n.x || 0) + NODE_W + 50 > maxX) maxX = (n.x || 0) + NODE_W + 50;
-                    if ((n.y || 0) + NODE_H + 50 > maxY) maxY = (n.y || 0) + NODE_H + 50;
+                    if ((n.x || 0) + NODE_W + 80 > maxX) maxX = (n.x || 0) + NODE_W + 80;
+                    if ((n.y || 0) + NODE_H + 80 > maxY) maxY = (n.y || 0) + NODE_H + 80;
                 });
+                levels.forEach(function(l) { if (l.y + 50 > maxY) maxY = l.y + 50; });
                 svg.setAttribute('width', maxX);
                 svg.setAttribute('height', maxY);
                 svg.style.width = maxX + 'px';
                 svg.style.height = maxY + 'px';
 
                 connections.forEach(function(c) {
-                    var fromNode = nodes.find(function(n) { return n.id === c.from; });
-                    var toNode = nodes.find(function(n) { return n.id === c.to; });
-                    if (!fromNode || !toNode) return;
-                    var x1 = (fromNode.x || 0) + NODE_W/2, y1 = (fromNode.y || 0) + NODE_H;
-                    var x2 = (toNode.x || 0) + NODE_W/2, y2 = (toNode.y || 0);
-                    var midY = (y1 + y2) / 2;
+                    var p = nodes.find(function(n) { return n.id === c.from; });
+                    var ch = nodes.find(function(n) { return n.id === c.to; });
+                    if (!p || !ch) return;
                     var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                    path.setAttribute('d', 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + midY + ' ' + x2 + ',' + midY + ' ' + x2 + ',' + y2);
-                    path.setAttribute('class', 'connection-line');
+                    var d;
+                    if (c.lateral) {
+                        // Conexión lateral: del lado derecho del padre al lado izquierdo del hijo
+                        var x1 = (p.x || 0) + NODE_W;
+                        var y1 = (p.y || 0) + NODE_H/2;
+                        var x2 = (ch.x || 0);
+                        var y2 = (ch.y || 0) + NODE_H/2;
+                        var midX = (x1 + x2) / 2;
+                        d = 'M' + x1 + ',' + y1 + ' L' + midX + ',' + y1 + ' L' + midX + ',' + y2 + ' L' + x2 + ',' + y2;
+                        path.setAttribute('class', 'connection-line lateral-line');
+                    } else {
+                        // Conexión vertical ortogonal: del centro inferior del padre al centro superior del hijo
+                        var px = (p.x || 0) + NODE_W/2;
+                        var py = (p.y || 0) + NODE_H;
+                        var cx = (ch.x || 0) + NODE_W/2;
+                        var cy = (ch.y || 0);
+                        var midY = (py + cy) / 2;
+                        d = 'M' + px + ',' + py + ' L' + px + ',' + midY + ' L' + cx + ',' + midY + ' L' + cx + ',' + cy;
+                        path.setAttribute('class', 'connection-line');
+                    }
+                    path.setAttribute('d', d);
+                    path.setAttribute('marker-end', 'url(#arrow)');
                     svg.appendChild(path);
+                });
+            }
+
+            function drawLevels() {
+                var svg = document.getElementById('levelsSvg');
+                svg.innerHTML = '';
+                var maxX = 1200;
+                nodes.forEach(function(n) { if ((n.x || 0) + NODE_W + 80 > maxX) maxX = (n.x || 0) + NODE_W + 80; });
+                svg.setAttribute('width', maxX);
+                svg.setAttribute('height', 2000);
+                svg.style.width = maxX + 'px';
+                levels.forEach(function(lv) {
+                    var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', 0); line.setAttribute('x2', maxX);
+                    line.setAttribute('y1', lv.y); line.setAttribute('y2', lv.y);
+                    line.setAttribute('class', 'level-line');
+                    svg.appendChild(line);
+
+                    var text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', maxX/2); text.setAttribute('y', lv.y - 6);
+                    text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('class', 'level-label');
+                    text.textContent = lv.label;
+                    svg.appendChild(text);
                 });
             }
 
@@ -353,39 +485,42 @@ if ($action === 'edit' && $orgId) {
             function zoomOut() { zoomLevel = Math.max(0.3, zoomLevel - 0.1); applyZoom(); }
             function zoomReset() { zoomLevel = 1; applyZoom(); }
 
-            // Zoom con rueda del ratón (Ctrl + wheel)
             document.getElementById('orgCanvas').addEventListener('wheel', function(e) {
-                if (e.ctrlKey || e.metaKey) {
-                    e.preventDefault();
-                    if (e.deltaY < 0) zoomIn(); else zoomOut();
-                }
+                if (e.ctrlKey || e.metaKey) { e.preventDefault(); if (e.deltaY < 0) zoomIn(); else zoomOut(); }
             }, { passive: false });
 
             // ====== AUTO-LAYOUT JERÁRQUICO ======
             function autoLayout(silent) {
                 if (nodes.length === 0) { if (!silent) alert('No hay nodos para organizar'); return; }
-                // Encontrar raíces (sin parent o parent inexistente)
                 var idSet = {}; nodes.forEach(function(n) { idSet[n.id] = true; });
                 var roots = nodes.filter(function(n) { return !n.parent || !idSet[n.parent]; });
                 if (roots.length === 0) roots = [nodes[0]];
 
-                // Función recursiva para calcular ancho del subárbol
+                function children(node) { return nodes.filter(function(c) { return c.parent === node.id && !c.lateral; }); }
+                function laterals(node) { return nodes.filter(function(c) { return c.parent === node.id && c.lateral; }); }
+
                 function subtreeWidth(node) {
-                    var children = nodes.filter(function(c) { return c.parent === node.id; });
-                    if (children.length === 0) return NODE_W + GAP_X;
+                    var ch = children(node);
+                    var lat = laterals(node);
+                    if (ch.length === 0) return NODE_W + GAP_X + lat.length * (NODE_W + LATERAL_GAP);
                     var w = 0;
-                    children.forEach(function(c) { w += subtreeWidth(c); });
-                    return Math.max(NODE_W + GAP_X, w);
+                    ch.forEach(function(c) { w += subtreeWidth(c); });
+                    return Math.max(NODE_W + GAP_X + lat.length * (NODE_W + LATERAL_GAP), w);
                 }
 
-                // Posicionar recursivamente
                 function placeNode(node, xStart, depth) {
-                    var children = nodes.filter(function(c) { return c.parent === node.id; });
+                    var ch = children(node);
+                    var lat = laterals(node);
                     var totalW = subtreeWidth(node);
-                    node.x = xStart + (totalW - NODE_W) / 2;
+                    node.x = xStart + (totalW - NODE_W - lat.length * (NODE_W + LATERAL_GAP)) / 2;
                     node.y = 50 + depth * (NODE_H + GAP_Y);
+                    // colocar laterales a la derecha del nodo
+                    lat.forEach(function(l, i) {
+                        l.x = node.x + NODE_W + LATERAL_GAP + i * (NODE_W + LATERAL_GAP);
+                        l.y = node.y;
+                    });
                     var cx = xStart;
-                    children.forEach(function(c) {
+                    ch.forEach(function(c) {
                         var cw = subtreeWidth(c);
                         placeNode(c, cx, depth + 1);
                         cx += cw;
@@ -393,25 +528,22 @@ if ($action === 'edit' && $orgId) {
                 }
 
                 var x = 30;
-                roots.forEach(function(r) {
-                    var w = subtreeWidth(r);
-                    placeNode(r, x, 0);
-                    x += w + GAP_X * 2;
-                });
+                roots.forEach(function(r) { var w = subtreeWidth(r); placeNode(r, x, 0); x += w + GAP_X * 2; });
 
                 renderAll();
                 if (!silent) alert('Organigrama auto-organizado. Recuerda Guardar.');
             }
 
-            // Agregar nodo
+            // ====== CRUD NODOS ======
             function addNode() {
                 document.getElementById('modalTitle').textContent = 'Agregar Posición';
                 document.getElementById('nodeName').value = '';
                 document.getElementById('nodePuesto').value = '';
-                document.getElementById('nodeColor').value = '#1976D2';
+                document.getElementById('nodeColor').value = '#2E75B6';
                 document.getElementById('nodeEditId').value = '';
                 document.getElementById('nodePhotoFile').value = '';
                 document.getElementById('nodePhoto').value = '';
+                document.getElementById('nodeLateral').checked = false;
                 document.getElementById('nodePhotoPreview').style.display = 'none';
                 document.getElementById('nodeModal').style.display = 'flex';
             }
@@ -422,10 +554,11 @@ if ($action === 'edit' && $orgId) {
                 document.getElementById('modalTitle').textContent = 'Editar Posición';
                 document.getElementById('nodeName').value = n.name;
                 document.getElementById('nodePuesto').value = n.puesto;
-                document.getElementById('nodeColor').value = n.color || '#1976D2';
+                document.getElementById('nodeColor').value = n.color || '#2E75B6';
                 document.getElementById('nodeEditId').value = n.id;
                 document.getElementById('nodePhotoFile').value = n.photo || '';
                 document.getElementById('nodePhoto').value = '';
+                document.getElementById('nodeLateral').checked = !!n.lateral;
                 if (n.photo) {
                     document.getElementById('nodePhotoPreview').src = '../assets/uploads/company/' + n.photo;
                     document.getElementById('nodePhotoPreview').style.display = 'block';
@@ -443,10 +576,10 @@ if ($action === 'edit' && $orgId) {
                 var color = document.getElementById('nodeColor').value;
                 var editId = document.getElementById('nodeEditId').value;
                 var photoFile = document.getElementById('nodePhotoFile').value;
+                var lateral = document.getElementById('nodeLateral').checked;
 
                 if (!name || !puesto) { alert('Nombre y puesto son obligatorios'); return; }
 
-                // Subir foto si hay
                 var fileInput = document.getElementById('nodePhoto');
                 if (fileInput.files.length > 0) {
                     var formData = new FormData();
@@ -463,17 +596,13 @@ if ($action === 'edit' && $orgId) {
 
                 if (editId) {
                     var n = nodes.find(function(x) { return x.id === editId; });
-                    if (n) { n.name = name; n.puesto = puesto; n.color = color; if (photoFile) n.photo = photoFile; }
+                    if (n) { n.name = name; n.puesto = puesto; n.color = color; n.lateral = lateral; if (photoFile) n.photo = photoFile; }
                 } else {
                     nodes.push({
                         id: 'n' + Date.now(),
-                        name: name,
-                        puesto: puesto,
-                        color: color,
-                        photo: photoFile,
-                        x: 50 + Math.random() * 400,
-                        y: 50 + Math.random() * 300,
-                        parent: null
+                        name: name, puesto: puesto, color: color, photo: photoFile,
+                        lateral: lateral,
+                        x: 50 + Math.random() * 400, y: 50 + Math.random() * 300, parent: null
                     });
                 }
                 closeModal();
@@ -488,50 +617,60 @@ if ($action === 'edit' && $orgId) {
                 renderAll();
             }
 
-            // Conectar nodos
+            function toggleLateral(id) {
+                var n = nodes.find(function(x) { return x.id === id; });
+                if (!n) return;
+                n.lateral = !n.lateral;
+                renderAll();
+            }
+
+            // ====== CONEXIONES ======
             function connectMode() {
-                isConnecting = !isConnecting;
-                connectFrom = null;
+                isConnecting = !isConnecting; connectFrom = null;
                 document.getElementById('orgCanvas').style.cursor = isConnecting ? 'crosshair' : 'default';
-                if (isConnecting) alert('Modo conexión activado. Haz clic en el nodo SUPERIOR, luego en el INFERIOR.');
+                if (isConnecting) alert('Modo conexión activado. Haz clic en el nodo PADRE, luego en el HIJO.');
             }
-
-            function startConnect(id) {
-                if (!isConnecting) { isConnecting = true; }
-                connectFrom = id;
-                document.getElementById('orgCanvas').style.cursor = 'crosshair';
-            }
-
+            function startConnect(id) { if (!isConnecting) isConnecting = true; connectFrom = id; document.getElementById('orgCanvas').style.cursor = 'crosshair'; }
             function finishConnect(id) {
                 if (connectFrom && connectFrom !== id) {
                     var n = nodes.find(function(x) { return x.id === id; });
                     if (n) n.parent = connectFrom;
                 }
-                connectFrom = null;
-                isConnecting = false;
+                connectFrom = null; isConnecting = false;
                 document.getElementById('orgCanvas').style.cursor = 'default';
                 renderAll();
             }
 
-            // Guardar organigrama
+            // ====== SEPARADORES DE NIVEL ======
+            function addLevel() {
+                var label = prompt('Nombre del nivel (ej: "Upper Management Level", "Operational Level"):', 'Upper Management Level');
+                if (!label) return;
+                var y = parseInt(prompt('Posición vertical en pixeles (Y):', '300'), 10);
+                if (isNaN(y)) return;
+                levels.push({ id: 'l' + Date.now(), label: label, y: y });
+                renderAll();
+            }
+
+            // ====== GUARDAR / EXPORTAR ======
             function saveOrg() {
                 var formData = new FormData();
                 formData.append('save_nodes', '1');
                 formData.append('org_id', orgId);
-                formData.append('nodes_json', JSON.stringify(nodes));
+                formData.append('nodes_json', JSON.stringify({ nodes: nodes, levels: levels }));
                 fetch('organigrama_drag.php', { method: 'POST', body: formData })
                     .then(function(r) { return r.json(); })
                     .then(function(d) { if (d.success) alert('Organigrama guardado correctamente'); });
             }
 
-            // Exportar como imagen
             function exportImage() {
                 var layer = getZoomLayer();
                 var prevTransform = layer.style.transform;
                 layer.style.transform = 'scale(1)';
+                layer.querySelectorAll('.level-handle').forEach(function(h) { h.style.visibility = 'hidden'; });
                 if (typeof html2canvas !== 'undefined') {
-                    html2canvas(layer, {backgroundColor: '#f0f2f5'}).then(function(c) {
+                    html2canvas(layer, {backgroundColor: '#ffffff'}).then(function(c) {
                         layer.style.transform = prevTransform;
+                        layer.querySelectorAll('.level-handle').forEach(function(h) { h.style.visibility = ''; });
                         var link = document.createElement('a');
                         link.download = 'organigrama.png';
                         link.href = c.toDataURL();
@@ -545,14 +684,10 @@ if ($action === 'edit' && $orgId) {
                 }
             }
 
-            // Preview foto
             document.getElementById('nodePhoto').addEventListener('change', function(e) {
                 if (e.target.files[0]) {
                     var reader = new FileReader();
-                    reader.onload = function(ev) {
-                        document.getElementById('nodePhotoPreview').src = ev.target.result;
-                        document.getElementById('nodePhotoPreview').style.display = 'block';
-                    };
+                    reader.onload = function(ev) { document.getElementById('nodePhotoPreview').src = ev.target.result; document.getElementById('nodePhotoPreview').style.display = 'block'; };
                     reader.readAsDataURL(e.target.files[0]);
                 }
             });
@@ -582,7 +717,8 @@ if ($action === 'edit' && $orgId) {
                 $colores = ['#1976D2','#E53935','#43A047','#FF9800','#9C27B0','#00BCD4','#E91E63','#3F51B5'];
                 foreach ($organigramas as $i => $org):
                     $datos = json_decode($org['datos_json'] ?: '[]', true);
-                    $numNodos = count($datos);
+                    // Compat: nuevo formato {nodes, levels} o array antiguo
+                    $numNodos = is_array($datos) ? (isset($datos['nodes']) ? count($datos['nodes']) : count($datos)) : 0;
                     $color = $colores[$i % count($colores)];
                 ?>
                 <div class="org-list-card" style="border-left-color: <?php echo $color; ?>;">
