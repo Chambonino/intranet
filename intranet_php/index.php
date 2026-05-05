@@ -4,6 +4,7 @@
  */
 require_once 'includes/config.php';
 require_once 'includes/functions.php';
+require_once 'includes/ad_helper.php';
 
 $sliderNoticias = getSliderNoticias($pdo);
 $aplicaciones = getAplicaciones($pdo);
@@ -14,15 +15,16 @@ $cuentaRegresiva = getCuentaRegresiva($pdo);
 $avisos = getAvisosActivos($pdo);
 $infoCompania = getInfoCompania($pdo);
 
-// Cumpleañeros
+// Cumpleañeros (legacy MySQL — se mantiene la consulta por compatibilidad pero no se muestra)
 $cumpleaneros = getCumpleanerosMes($pdo);
 $cumpleanerosHoy = getCumpleanerosHoy($pdo);
 $allBirthdays = array_merge($cumpleanerosHoy, array_filter($cumpleaneros, function($c) {
     return date('d', strtotime($c['fecha_nacimiento'])) != date('d');
 }));
 
-// Aniversarios laborales del mes
-$aniversarios = $pdo->query("SELECT e.*, d.nombre as departamento_nombre FROM empleados_cumpleanos e LEFT JOIN departamentos d ON e.departamento_id = d.id WHERE e.activo = 1 AND e.fecha_ingreso IS NOT NULL AND MONTH(e.fecha_ingreso) = MONTH(CURDATE()) ORDER BY DAY(e.fecha_ingreso) ASC")->fetchAll();
+// === DATOS DESDE ACTIVE DIRECTORY (LDAP) ===
+$nuevosIngresos = getNuevosIngresosAD(60);   // últimos 60 días
+$aniversarios   = getAniversariosAD();        // aniversarios de este mes
 
 // Eventos paginados
 $evPage = max(1, (int)($_GET['ev_page'] ?? 1));
@@ -211,31 +213,39 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
             </div>
         </div>
 
-        <!-- ROW 2: Cumpleaños slider + Aniversarios slider -->
+        <!-- ROW 2: Nuevos Ingresos (AD) + Aniversarios Laborales (AD) -->
         <div class="grid-2-col">
             <div class="section-card">
-                <div class="section-header"><i class="fas fa-birthday-cake"></i> Cumplea&ntilde;os</div>
+                <div class="section-header"><i class="fas fa-user-plus"></i> Nuevos Ingresos</div>
                 <div style="position:relative;overflow:hidden;padding:15px 20px 20px;">
-                    <div id="bdTrack" style="display:flex;gap:15px;transition:transform 0.5s;"><?php if (count($allBirthdays) > 0): foreach ($allBirthdays as $c): ?>
-                    <div style="min-width:220px;background:linear-gradient(135deg,#e65100,#ff9800);border-radius:12px;padding:18px;flex-shrink:0;text-align:center;color:white;cursor:pointer;transition:transform 0.3s;" onclick="openBirthdayCard('<?php echo htmlspecialchars($c['nombre_completo'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($c['departamento_nombre'] ?? '', ENT_QUOTES); ?>','<?php echo htmlspecialchars($c['puesto'] ?? '', ENT_QUOTES); ?>','assets/uploads/employees/<?php echo $c['foto'] ?: 'default.png'; ?>')" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="assets/uploads/employees/<?php echo $c['foto'] ?: 'default.png'; ?>" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid white;margin-bottom:10px;" onerror="this.src='assets/img/default-avatar.svg'">
-                        <div style="font-weight:600;"><?php echo htmlspecialchars($c['nombre_completo']); ?></div>
-                        <div style="font-size:0.75rem;opacity:0.9;"><?php echo htmlspecialchars($c['departamento_nombre'] ?? ''); ?></div>
-                        <div style="font-size:0.7rem;opacity:0.8;margin-top:5px;"><?php echo date('d', strtotime($c['fecha_nacimiento'])); ?> de este mes</div>
+                    <div id="bdTrack" style="display:flex;gap:15px;transition:transform 0.5s;" data-testid="nuevos-ingresos-track"><?php if (count($nuevosIngresos) > 0): foreach ($nuevosIngresos as $n):
+                        $fotoSrc = $n['foto'] ?: 'assets/img/default-avatar.svg';
+                        $diasAtras = max(0, floor((time() - $n['fecha_ingreso_ts']) / 86400));
+                    ?>
+                    <div style="min-width:220px;background:linear-gradient(135deg,#0d47a1,#42a5f5);border-radius:12px;padding:18px;flex-shrink:0;text-align:center;color:white;cursor:pointer;transition:transform 0.3s;" onclick="openNewHireCard('<?php echo htmlspecialchars($n['nombre'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($n['departamento'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($n['puesto'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($fotoSrc, ENT_QUOTES); ?>','<?php echo date('d M Y', $n['fecha_ingreso_ts']); ?>')" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="<?php echo htmlspecialchars($fotoSrc); ?>" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid white;margin-bottom:10px;" onerror="this.src='assets/img/default-avatar.svg'">
+                        <div style="font-weight:600;font-size:0.9rem;"><?php echo htmlspecialchars($n['nombre']); ?></div>
+                        <div style="font-size:0.75rem;opacity:0.9;"><?php echo htmlspecialchars($n['puesto'] ?: $n['departamento']); ?></div>
+                        <div style="font-size:0.7rem;opacity:0.85;margin-top:5px;background:rgba(255,255,255,0.18);border-radius:10px;padding:3px 10px;display:inline-block;">
+                            <i class="fas fa-clock"></i> <?php echo $diasAtras == 0 ? 'Hoy' : ($diasAtras . ' día' . ($diasAtras != 1 ? 's' : '')); ?>
+                        </div>
                     </div>
-                    <?php endforeach; else: ?><p style="color:var(--text-muted);font-size:0.85rem;">Sin cumplea&ntilde;os</p><?php endif; ?></div>
-                    <?php if (count($allBirthdays) > 2): ?><button onclick="slideTrack('bdTrack',-1)" style="position:absolute;left:5px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.7);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;z-index:5;"><i class="fas fa-chevron-left"></i></button><button onclick="slideTrack('bdTrack',1)" style="position:absolute;right:5px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.7);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;z-index:5;"><i class="fas fa-chevron-right"></i></button><?php endif; ?>
+                    <?php endforeach; else: ?><p style="color:var(--text-muted);font-size:0.85rem;">Sin nuevos ingresos recientes</p><?php endif; ?></div>
+                    <?php if (count($nuevosIngresos) > 2): ?><button onclick="slideTrack('bdTrack',-1)" style="position:absolute;left:5px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.7);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;z-index:5;"><i class="fas fa-chevron-left"></i></button><button onclick="slideTrack('bdTrack',1)" style="position:absolute;right:5px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.7);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;z-index:5;"><i class="fas fa-chevron-right"></i></button><?php endif; ?>
                 </div>
             </div>
             <div class="section-card">
                 <div class="section-header"><i class="fas fa-award"></i> Aniversarios Laborales</div>
                 <div style="position:relative;overflow:hidden;padding:15px 20px 20px;">
-                    <div id="anivTrack" style="display:flex;gap:15px;transition:transform 0.5s;"><?php if (count($aniversarios) > 0): foreach ($aniversarios as $a): $anos = date('Y') - date('Y', strtotime($a['fecha_ingreso'])); ?>
-                    <div class="aniv-card" onclick="openAnivCard('<?php echo htmlspecialchars($a['nombre_completo'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($a['departamento_nombre'] ?? '', ENT_QUOTES); ?>','<?php echo htmlspecialchars($a['puesto'] ?? '', ENT_QUOTES); ?>','assets/uploads/employees/<?php echo $a['foto'] ?: 'default.png'; ?>',<?php echo $anos; ?>)">
-                        <img src="assets/uploads/employees/<?php echo $a['foto'] ?: 'default.png'; ?>" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid gold;margin-bottom:10px;" onerror="this.src='assets/img/default-avatar.svg'">
-                        <div style="font-weight:600;"><?php echo htmlspecialchars($a['nombre_completo']); ?></div>
+                    <div id="anivTrack" style="display:flex;gap:15px;transition:transform 0.5s;" data-testid="aniversarios-track"><?php if (count($aniversarios) > 0): foreach ($aniversarios as $a):
+                        $fotoSrc = $a['foto'] ?: 'assets/img/default-avatar.svg';
+                        $anos = $a['anos'];
+                    ?>
+                    <div class="aniv-card" onclick="openAnivCard('<?php echo htmlspecialchars($a['nombre'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($a['departamento'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($a['puesto'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($fotoSrc, ENT_QUOTES); ?>',<?php echo $anos; ?>)">
+                        <img src="<?php echo htmlspecialchars($fotoSrc); ?>" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid gold;margin-bottom:10px;" onerror="this.src='assets/img/default-avatar.svg'">
+                        <div style="font-weight:600;"><?php echo htmlspecialchars($a['nombre']); ?></div>
                         <div style="font-size:0.75rem;opacity:0.8;"><?php echo $anos; ?> a&ntilde;o<?php echo $anos != 1 ? 's' : ''; ?> en la empresa</div>
-                        <div style="font-size:0.7rem;opacity:0.7;"><?php echo date('d', strtotime($a['fecha_ingreso'])); ?> de este mes</div>
+                        <div style="font-size:0.7rem;opacity:0.7;"><?php echo date('d', $a['fecha_ingreso_ts']); ?> de este mes</div>
                     </div>
                     <?php endforeach; else: ?><p style="color:var(--text-muted);font-size:0.85rem;">Sin aniversarios este mes</p><?php endif; ?></div>
                     <?php if (count($aniversarios) > 2): ?><button onclick="slideTrack('anivTrack',-1)" style="position:absolute;left:5px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.7);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;z-index:5;"><i class="fas fa-chevron-left"></i></button><button onclick="slideTrack('anivTrack',1)" style="position:absolute;right:5px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.7);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;z-index:5;"><i class="fas fa-chevron-right"></i></button><?php endif; ?>
@@ -462,9 +472,9 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
     function openVideoModal(s,t){let m=document.getElementById('vidM');if(!m){m=document.createElement('div');m.id='vidM';m.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;';m.innerHTML='<button onclick="closeVM()" style="position:absolute;top:20px;right:20px;background:none;border:none;color:white;font-size:2rem;cursor:pointer;"><i class="fas fa-times"></i></button><video id="mVid" controls autoplay style="max-width:90%;max-height:75%;border-radius:10px;"></video><p id="mVT" style="color:white;margin-top:15px;"></p>';m.addEventListener('click',function(e){if(e.target===m)closeVM();});document.body.appendChild(m);}document.getElementById('mVid').src=s;document.getElementById('mVT').textContent=t;m.style.display='flex';}
     function closeVM(){const m=document.getElementById('vidM'),v=document.getElementById('mVid');if(v){v.pause();v.src='';}if(m)m.style.display='none';}
 
-    // Birthday / Anniversary card modal
-    function openBirthdayCard(name,dept,puesto,foto){let m=document.getElementById('bdM');if(!m){m=document.createElement('div');m.id='bdM';m.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;';m.addEventListener('click',function(e){if(e.target===m)m.style.display='none';});document.body.appendChild(m);}
-    m.innerHTML='<div style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:20px;padding:40px;text-align:center;max-width:400px;color:white;position:relative;"><button onclick="document.getElementById(\'bdM\').style.display=\'none\'" style="position:absolute;top:10px;right:15px;background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;"><i class="fas fa-times"></i></button><div style="font-size:3rem;margin-bottom:15px;">&#127874;</div><img src="'+foto+'" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:4px solid white;margin-bottom:15px;" onerror="this.src=\'assets/img/default-avatar.svg\'"><h2 style="margin-bottom:5px;">'+name+'</h2><p style="opacity:0.9;">'+puesto+'</p><p style="opacity:0.8;font-size:0.9rem;">'+dept+'</p><div style="margin-top:20px;padding:15px;background:rgba(255,255,255,0.2);border-radius:10px;font-style:italic;">\u00a1Feliz cumplea\u00f1os '+name.split(' ')[0]+'! Que tengas un excelente d\u00eda lleno de alegr\u00eda.</div></div>';m.style.display='flex';}
+    // New Hire / Anniversary card modal
+    function openNewHireCard(name,dept,puesto,foto,fechaIng){let m=document.getElementById('bdM');if(!m){m=document.createElement('div');m.id='bdM';m.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;';m.addEventListener('click',function(e){if(e.target===m)m.style.display='none';});document.body.appendChild(m);}
+    m.innerHTML='<div style="background:linear-gradient(135deg,#0d47a1,#42a5f5);border-radius:20px;padding:40px;text-align:center;max-width:400px;color:white;position:relative;"><button onclick="document.getElementById(\'bdM\').style.display=\'none\'" style="position:absolute;top:10px;right:15px;background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;"><i class="fas fa-times"></i></button><div style="font-size:3rem;margin-bottom:15px;"><i class="fas fa-user-plus"></i></div><img src="'+foto+'" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:4px solid white;margin-bottom:15px;" onerror="this.src=\'assets/img/default-avatar.svg\'"><h2 style="margin-bottom:5px;">'+name+'</h2><p style="opacity:0.9;">'+puesto+'</p><p style="opacity:0.8;font-size:0.9rem;">'+dept+'</p><div style="margin-top:15px;padding:8px 18px;background:rgba(255,255,255,0.2);border-radius:20px;display:inline-block;font-size:0.85rem;"><i class="far fa-calendar-alt"></i> Ingreso: '+fechaIng+'</div><div style="margin-top:18px;padding:15px;background:rgba(255,255,255,0.18);border-radius:10px;font-style:italic;">\u00a1Bienvenido(a) '+name.split(' ')[0]+' al equipo! Estamos felices de tenerte con nosotros.</div></div>';m.style.display='flex';}
 
     function openAnivCard(name,dept,puesto,foto,anos){let m=document.getElementById('anivM');if(!m){m=document.createElement('div');m.id='anivM';m.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;';m.addEventListener('click',function(e){if(e.target===m)m.style.display='none';});document.body.appendChild(m);}
     m.innerHTML='<div style="background:linear-gradient(135deg,#1a237e,#283593);border-radius:20px;padding:40px;text-align:center;max-width:400px;color:white;position:relative;"><button onclick="document.getElementById(\'anivM\').style.display=\'none\'" style="position:absolute;top:10px;right:15px;background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;"><i class="fas fa-times"></i></button><div style="font-size:3rem;margin-bottom:15px;">&#127942;</div><img src="'+foto+'" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:4px solid gold;margin-bottom:15px;" onerror="this.src=\'assets/img/default-avatar.svg\'"><h2 style="margin-bottom:5px;">'+name+'</h2><p style="opacity:0.9;">'+puesto+'</p><p style="opacity:0.8;font-size:0.9rem;">'+dept+'</p><div style="font-size:2.5rem;font-weight:800;margin:15px 0;color:gold;">'+anos+' A\u00f1o'+(anos!=1?'s':'')+'</div><div style="padding:15px;background:rgba(255,255,255,0.2);border-radius:10px;font-style:italic;">\u00a1Felicidades '+name.split(' ')[0]+' por tu aniversario en la empresa!</div></div>';m.style.display='flex';}
