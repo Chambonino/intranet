@@ -256,6 +256,20 @@ body {
 .encuesta-widget .enc-total { font-size: 0.72rem; color: var(--text-muted); margin-top: 10px; text-align: right; }
 .encuesta-widget .enc-thankyou { color: var(--accent-green); font-size: 0.82rem; margin: 10px 0; text-align: center; }
 
+/* === Overrides para slider dentro de columna === */
+.col-main .slider-container { max-width: 100%; }
+.col-main .slider-container .slide { background: #1a1a1a; }
+
+/* === Auto-slider mini cards === */
+.auto-slider { will-change: transform; }
+.mini-card { transition: transform 0.3s; }
+.mini-card:hover { transform: scale(1.03); }
+
+/* === Apps grid compacto === */
+.apps-grid-compact .app-card { min-height: 78px; aspect-ratio: 1; padding: 10px 4px !important; }
+.apps-grid-compact .app-card i { margin-bottom: 4px; }
+.apps-grid-compact .app-card span { font-size: 0.62rem !important; line-height: 1.1; text-align: center; }
+
 /* ============================================
    SECTION CARD
    ============================================ */
