@@ -109,6 +109,7 @@ $videos = $pdo->query("SELECT * FROM videos ORDER BY orden ASC, id DESC")->fetch
                     <a href="galeria.php"><i class="fas fa-photo-video"></i> <span>Galería Fotos</span></a>
                     <a href="videos.php" class="active"><i class="fas fa-video"></i> <span>Videos</span></a>
                     <a href="articulos.php"><i class="fas fa-newspaper"></i> <span>Artículos</span></a>
+                    <a href="encuestas.php"><i class="fas fa-poll"></i> <span>Encuestas</span></a>
                 </div>
                 <div class="menu-section">
                     <a href="archivos.php"><i class="fas fa-folder"></i> <span>Archivos Depto.</span></a>

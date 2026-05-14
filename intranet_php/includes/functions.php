@@ -205,4 +205,26 @@ function truncarTexto($texto, $longitud = 100) {
     }
     return substr($texto, 0, $longitud) . '...';
 }
+
+/**
+ * Obtener encuesta activa más reciente con sus opciones
+ */
+function getEncuestaActiva($pdo) {
+    try {
+        $stmt = $pdo->query("SELECT * FROM encuestas WHERE activa = 1 AND (fecha_inicio IS NULL OR fecha_inicio <= NOW()) AND (fecha_fin IS NULL OR fecha_fin >= NOW()) ORDER BY fecha_creacion DESC LIMIT 1");
+        $enc = $stmt->fetch();
+        if (!$enc) return null;
+        $stmt2 = $pdo->prepare("SELECT o.id, o.texto, COUNT(r.id) as votos FROM encuestas_opciones o LEFT JOIN encuestas_respuestas r ON r.opcion_id = o.id WHERE o.encuesta_id = ? GROUP BY o.id, o.texto, o.orden ORDER BY o.orden ASC");
+        $stmt2->execute([$enc['id']]);
+        $enc['opciones'] = $stmt2->fetchAll();
+        $enc['total_votos'] = array_sum(array_column($enc['opciones'], 'votos'));
+        // Verificar si esta IP ya votó
+        $check = $pdo->prepare("SELECT COUNT(*) FROM encuestas_respuestas WHERE encuesta_id = ? AND ip = ?");
+        $check->execute([$enc['id'], $_SERVER['REMOTE_ADDR'] ?? '']);
+        $enc['ya_voto'] = $check->fetchColumn() > 0;
+        return $enc;
+    } catch (Exception $e) {
+        return null;
+    }
+}
 ?>

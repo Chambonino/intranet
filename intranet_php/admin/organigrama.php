@@ -68,6 +68,7 @@ $organigramas = $pdo->query("SELECT * FROM organigrama ORDER BY activo DESC, id 
                     <a href="galeria.php"><i class="fas fa-photo-video"></i> <span>Galería</span></a>
                     <a href="videos.php"><i class="fas fa-video"></i> <span>Videos</span></a>
                     <a href="articulos.php"><i class="fas fa-newspaper"></i> <span>Artículos</span></a>
+                    <a href="encuestas.php"><i class="fas fa-poll"></i> <span>Encuestas</span></a>
                 </div>
                 <div class="menu-section">
                     <a href="kpis.php"><i class="fas fa-chart-line"></i> <span>KPIs</span></a>

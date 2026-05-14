@@ -84,6 +84,7 @@ $kpis = $pdo->query("SELECT k.*, d.nombre as dept_nombre FROM kpis_departamento 
                     <a href="galeria.php"><i class="fas fa-photo-video"></i> <span>Galería</span></a>
                     <a href="videos.php"><i class="fas fa-video"></i> <span>Videos</span></a>
                     <a href="articulos.php"><i class="fas fa-newspaper"></i> <span>Artículos</span></a>
+                    <a href="encuestas.php"><i class="fas fa-poll"></i> <span>Encuestas</span></a>
                 </div>
                 <div class="menu-section">
                     <a href="kpis.php" class="active"><i class="fas fa-chart-line"></i> <span>KPIs</span></a>

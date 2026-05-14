@@ -99,6 +99,7 @@ $slides = $pdo->query("SELECT * FROM slider_noticias ORDER BY orden ASC, id DESC
                     <a href="galeria.php"><i class="fas fa-photo-video"></i> <span>Galería Fotos</span></a>
                     <a href="videos.php"><i class="fas fa-video"></i> <span>Videos</span></a>
                     <a href="articulos.php"><i class="fas fa-newspaper"></i> <span>Artículos</span></a>
+                    <a href="encuestas.php"><i class="fas fa-poll"></i> <span>Encuestas</span></a>
                 </div>
                 <div class="menu-section">
                     <span class="menu-section-title">Configuración</span>
