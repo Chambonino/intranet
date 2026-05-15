@@ -85,7 +85,13 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo SITE_NAME; ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css?v=<?php echo date('YmdHis'); ?>">
+    <style>
+    /* Keyframes inline para garantizar que funcione sin depender del CSS externo */
+    @keyframes carousel-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    .carousel-wrap { position: relative; overflow: hidden; }
+    .carousel-track:hover { animation-play-state: paused !important; }
+    </style>
     <style>
     /* Countdown animation */
     @keyframes glow { 0%,100%{opacity:1;text-shadow:0 0 10px rgba(229,57,53,0.8);} 50%{opacity:0.7;text-shadow:0 0 25px rgba(229,57,53,1);} }
@@ -100,7 +106,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
     .aviso-outline strong { color: var(--text-primary); }
     .aviso-outline p { color: var(--text-secondary); }
     /* Anniversary card */
-    .aniv-card { min-width: 220px; background: linear-gradient(135deg, #1a237e, #283593); border-radius: 12px; padding: 18px; flex-shrink: 0; text-align: center; color: white; cursor: pointer; transition: transform 0.3s; }
+    .aniv-card { background: linear-gradient(135deg, #1a237e, #283593); border-radius: 12px; padding: 18px; text-align: center; color: white; cursor: pointer; transition: transform 0.3s; }
     .aniv-card:hover { transform: scale(1.03); }
     </style>
 </head>
@@ -264,7 +270,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                             $niLoop = count($nuevosIngresos) > 2 ? array_merge($nuevosIngresos, $nuevosIngresos) : $nuevosIngresos;
                             $duration = max(20, count($nuevosIngresos) * 6); // 6s por card
                         ?>
-                        <div class="carousel-track" style="--carousel-duration: <?php echo $duration; ?>s;" data-testid="nuevos-ingresos-track">
+                        <div class="carousel-track" style="display:flex;gap:10px;width:max-content;animation:carousel-scroll <?php echo $duration; ?>s linear infinite;" data-testid="nuevos-ingresos-track">
                         <?php foreach ($niLoop as $n):
                             $fotoSrc = $n['foto'] ?: 'assets/img/default-avatar.svg';
                             $diasAtras = max(0, floor((time() - $n['fecha_ingreso_ts']) / 86400));
@@ -340,7 +346,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                         $anivLoop = count($aniversarios) > 2 ? array_merge($aniversarios, $aniversarios) : $aniversarios;
                         $aDur = max(20, count($aniversarios) * 7);
                     ?>
-                    <div class="carousel-track" style="--carousel-duration: <?php echo $aDur; ?>s;" data-testid="aniversarios-track">
+                    <div class="carousel-track" style="display:flex;gap:10px;width:max-content;animation:carousel-scroll <?php echo $aDur; ?>s linear infinite;" data-testid="aniversarios-track">
                     <?php foreach ($anivLoop as $a):
                         $fotoSrc = $a['foto'] ?: 'assets/img/default-avatar.svg';
                         $anos = $a['anos'];
@@ -365,7 +371,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                         $bdLoop = count($allBirthdays) > 2 ? array_merge($allBirthdays, $allBirthdays) : $allBirthdays;
                         $bdDur = max(20, count($allBirthdays) * 7);
                     ?>
-                    <div class="carousel-track" style="--carousel-duration: <?php echo $bdDur; ?>s;">
+                    <div class="carousel-track" style="display:flex;gap:10px;width:max-content;animation:carousel-scroll <?php echo $bdDur; ?>s linear infinite;">
                     <?php foreach ($bdLoop as $c): ?>
                     <div class="mini-card" style="width:135px;background:linear-gradient(135deg,#0d47a1,#42a5f5);border-radius:11px;padding:10px 5px 11px;text-align:center;color:white;cursor:pointer;" onclick="openBirthdayCard('<?php echo htmlspecialchars($c['nombre_completo'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($c['departamento_nombre'] ?? '', ENT_QUOTES); ?>','<?php echo htmlspecialchars($c['puesto'] ?? '', ENT_QUOTES); ?>','assets/uploads/employees/<?php echo $c['foto'] ?: 'default.png'; ?>')">
                         <img src="assets/uploads/employees/<?php echo $c['foto'] ?: 'default.png'; ?>" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:3px solid white;margin-bottom:4px;" onerror="this.src='assets/img/default-avatar.svg'">
