@@ -151,7 +151,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 $tipoColors = ['info'=>'#1976D2','warning'=>'#FF9800','danger'=>'#E53935','success'=>'#43A047'];
                 $tipoColor = $tipoColors[$aviso['tipo']] ?? '#1976D2';
             ?>
-            <div class="aviso-fade-item" style="<?php echo $i > 0 ? 'opacity:0;position:absolute;top:0;left:0;right:0;' : 'opacity:1;'; ?>transition:opacity 0.8s ease;border:2px solid <?php echo $tipoColor; ?>;border-radius:8px;padding:10px 18px;display:flex;align-items:center;gap:12px;background:transparent;color:<?php echo $tipoColor; ?>;">
+            <div class="aviso-fade-item" style="<?php echo $i > 0 ? 'opacity:0;position:absolute;top:0;left:0;right:0;' : 'opacity:1;'; ?>transition:opacity 0.8s ease;padding:10px 18px;display:flex;align-items:center;gap:12px;background:transparent;color:<?php echo $tipoColor; ?>;">
                 <i class="fas fa-bullhorn"></i>
                 <div style="flex:1;"><strong style="color:var(--text-primary);"><?php echo htmlspecialchars($aviso['titulo']); ?></strong>
                 <?php if ($aviso['contenido']): ?><p style="font-size:0.8rem;margin-top:2px;color:var(--text-secondary);"><?php echo htmlspecialchars($aviso['contenido']); ?></p><?php endif; ?></div>
@@ -259,8 +259,8 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 </div>
             </div>
 
-            <!-- Subgrid: Nuevos Ingresos (izquierda) + Aplicaciones Rápidas (derecha) -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <!-- Subgrid: Nuevos Ingresos (estrecho) + Aplicaciones Rápidas (ancho) -->
+            <div style="display:grid;grid-template-columns:300px 1fr;gap:20px;">
                 <!-- Nuevos Ingresos (carrusel continuo, 2 visibles) -->
                 <div class="section-card">
                     <div class="section-header"><i class="fas fa-user-plus"></i> Nuevos Ingresos</div>
@@ -275,11 +275,11 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                             $fotoSrc = $n['foto'] ?: 'assets/img/default-avatar.svg';
                             $diasAtras = max(0, floor((time() - $n['fecha_ingreso_ts']) / 86400));
                         ?>
-                        <div class="mini-card" style="width:178px;background:linear-gradient(135deg,#0d47a1,#42a5f5);border-radius:12px;padding:14px 10px;text-align:center;color:white;cursor:pointer;" onclick="openNewHireCard('<?php echo htmlspecialchars($n['nombre'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($n['departamento'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($n['puesto'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($fotoSrc, ENT_QUOTES); ?>','<?php echo date('d M Y', $n['fecha_ingreso_ts']); ?>')">
-                            <img src="<?php echo htmlspecialchars($fotoSrc); ?>" style="width:58px;height:58px;border-radius:50%;object-fit:cover;border:3px solid white;margin-bottom:7px;" onerror="this.src='assets/img/default-avatar.svg'">
-                            <div style="font-weight:600;font-size:0.78rem;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($n['nombre']); ?></div>
-                            <div style="font-size:0.65rem;opacity:0.9;margin-top:3px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($n['puesto'] ?: $n['departamento']); ?></div>
-                            <div style="font-size:0.58rem;opacity:0.85;margin-top:5px;background:rgba(255,255,255,0.18);border-radius:8px;padding:1px 7px;display:inline-block;"><i class="fas fa-clock"></i> <?php echo $diasAtras == 0 ? 'Hoy' : ($diasAtras . ' día' . ($diasAtras != 1 ? 's' : '')); ?></div>
+                        <div class="mini-card" style="width:132px;background:linear-gradient(135deg,#0d47a1,#42a5f5);border-radius:12px;padding:12px 8px;text-align:center;color:white;cursor:pointer;" onclick="openNewHireCard('<?php echo htmlspecialchars($n['nombre'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($n['departamento'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($n['puesto'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($fotoSrc, ENT_QUOTES); ?>','<?php echo date('d M Y', $n['fecha_ingreso_ts']); ?>')">
+                            <img src="<?php echo htmlspecialchars($fotoSrc); ?>" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:3px solid white;margin-bottom:6px;" onerror="this.src='assets/img/default-avatar.svg'">
+                            <div style="font-weight:600;font-size:0.72rem;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 2px;"><?php echo htmlspecialchars($n['nombre']); ?></div>
+                            <div style="font-size:0.58rem;opacity:0.9;margin-top:3px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 2px;"><?php echo htmlspecialchars($n['puesto'] ?: $n['departamento']); ?></div>
+                            <div style="font-size:0.55rem;opacity:0.85;margin-top:4px;background:rgba(255,255,255,0.18);border-radius:7px;padding:1px 6px;display:inline-block;"><i class="fas fa-clock"></i> <?php echo $diasAtras == 0 ? 'Hoy' : ($diasAtras . ' día' . ($diasAtras != 1 ? 's' : '')); ?></div>
                         </div>
                         <?php endforeach; ?>
                         </div>
@@ -290,7 +290,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 <!-- Aplicaciones Rápidas (al lado) -->
                 <div class="section-card">
                     <div class="section-header"><i class="fas fa-th"></i> Aplicaciones Rápidas</div>
-                    <div class="apps-grid apps-grid-compact" style="padding:12px 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+                    <div class="apps-grid apps-grid-compact" style="padding:12px 14px;display:grid;grid-template-columns:repeat(6,1fr);gap:8px;">
                         <?php if ($organigrama): ?>
                         <a href="javascript:void(0)" onclick="openImageModal('assets/uploads/company/<?php echo $organigrama['imagen']; ?>','Organigrama Corporativo')" class="app-card" style="background:#E53935;padding:14px 6px;font-size:0.7rem;"><i class="fas fa-sitemap" style="font-size:1.3rem;"></i><span style="font-size:0.65rem;">Organigrama</span></a>
                         <?php endif; ?>
@@ -385,6 +385,44 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 </div>
             </div>
 
+
+            <!-- KPIs -->
+            <div class="section-card">
+                <div class="section-header" style="justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                    <span><i class="fas fa-chart-line"></i> KPI's por Departamento</span>
+                    <form method="GET" style="display:flex;gap:5px;align-items:center;">
+                        <select name="kpi_mes" class="dept-select" style="font-size:0.7rem;padding:4px 8px;" onchange="this.form.submit()">
+                            <?php foreach ($mesesEsp as $num => $nom): ?><option value="<?php echo $num; ?>" <?php echo $kpiMes == $num ? 'selected' : ''; ?>><?php echo $nom; ?></option><?php endforeach; ?>
+                        </select>
+                        <select name="kpi_anio" class="dept-select" style="font-size:0.7rem;padding:4px 8px;" onchange="this.form.submit()">
+                            <?php for ($y = date('Y') + 1; $y >= date('Y') - 3; $y--): ?><option value="<?php echo $y; ?>" <?php echo $kpiAnio == $y ? 'selected' : ''; ?>><?php echo $y; ?></option><?php endfor; ?>
+                        </select>
+                    </form>
+                </div>
+                <div style="padding:12px 15px;max-height:320px;overflow-y:auto;">
+                    <?php if (count($kpis) > 0):
+                        $currentDept = '';
+                        foreach ($kpis as $k):
+                            if ($k['dept_nombre'] !== $currentDept):
+                                $currentDept = $k['dept_nombre'];
+                    ?>
+                    <div style="font-size:0.7rem;font-weight:700;color:var(--accent-blue);text-transform:uppercase;letter-spacing:1px;margin:10px 0 6px;padding-top:6px;border-top:1px solid var(--border-color);"><?php echo htmlspecialchars($currentDept ?? 'General'); ?></div>
+                    <?php endif; ?>
+                    <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bg-input);border-radius:8px;margin-bottom:5px;">
+                        <?php if ($k['imagen']): ?>
+                        <img src="assets/uploads/kpis/<?php echo $k['imagen']; ?>" style="width:34px;height:34px;object-fit:cover;border-radius:6px;cursor:pointer;flex-shrink:0;" onclick="openImageModal('assets/uploads/kpis/<?php echo $k['imagen']; ?>','<?php echo htmlspecialchars($k['nombre'], ENT_QUOTES); ?>')">
+                        <?php else: ?>
+                        <div style="width:34px;height:34px;background:var(--accent-green);border-radius:6px;display:flex;align-items:center;justify-content:center;color:white;font-size:0.7rem;flex-shrink:0;"><i class="fas fa-chart-bar"></i></div>
+                        <?php endif; ?>
+                        <div style="flex:1;min-width:0;"><div style="font-size:0.74rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($k['nombre']); ?></div><div style="font-size:0.6rem;color:var(--text-muted);"><?php echo $mesesEsp[$k['mes']] ?? ''; ?> <?php echo $k['anio']; ?></div></div>
+                        <?php if ($k['archivo']): ?><a href="assets/uploads/kpis/<?php echo $k['archivo']; ?>" download style="color:var(--text-muted);font-size:0.75rem;" title="Descargar"><i class="fas fa-download"></i></a><?php endif; ?>
+                    </div>
+                    <?php endforeach; else: ?>
+                    <p style="color:var(--text-muted);font-size:0.8rem;padding:15px 0;">Sin KPIs para <?php echo $mesesEsp[(int)$kpiMes]; ?> <?php echo $kpiAnio; ?></p>
+                    <?php endif; ?>
+                </div>
+            </div>
+
             <!-- Encuesta rápida -->
             <div class="section-card">
                 <div class="section-header"><i class="fas fa-poll"></i> Encuesta rápida</div>
@@ -425,44 +463,6 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                     <?php endif; ?>
                 </div>
             </div>
-
-            <!-- KPIs -->
-            <div class="section-card">
-                <div class="section-header" style="justify-content:space-between;flex-wrap:wrap;gap:8px;">
-                    <span><i class="fas fa-chart-line"></i> KPI's por Departamento</span>
-                    <form method="GET" style="display:flex;gap:5px;align-items:center;">
-                        <select name="kpi_mes" class="dept-select" style="font-size:0.7rem;padding:4px 8px;" onchange="this.form.submit()">
-                            <?php foreach ($mesesEsp as $num => $nom): ?><option value="<?php echo $num; ?>" <?php echo $kpiMes == $num ? 'selected' : ''; ?>><?php echo $nom; ?></option><?php endforeach; ?>
-                        </select>
-                        <select name="kpi_anio" class="dept-select" style="font-size:0.7rem;padding:4px 8px;" onchange="this.form.submit()">
-                            <?php for ($y = date('Y') + 1; $y >= date('Y') - 3; $y--): ?><option value="<?php echo $y; ?>" <?php echo $kpiAnio == $y ? 'selected' : ''; ?>><?php echo $y; ?></option><?php endfor; ?>
-                        </select>
-                    </form>
-                </div>
-                <div style="padding:12px 15px;max-height:320px;overflow-y:auto;">
-                    <?php if (count($kpis) > 0):
-                        $currentDept = '';
-                        foreach ($kpis as $k):
-                            if ($k['dept_nombre'] !== $currentDept):
-                                $currentDept = $k['dept_nombre'];
-                    ?>
-                    <div style="font-size:0.7rem;font-weight:700;color:var(--accent-blue);text-transform:uppercase;letter-spacing:1px;margin:10px 0 6px;padding-top:6px;border-top:1px solid var(--border-color);"><?php echo htmlspecialchars($currentDept ?? 'General'); ?></div>
-                    <?php endif; ?>
-                    <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bg-input);border-radius:8px;margin-bottom:5px;">
-                        <?php if ($k['imagen']): ?>
-                        <img src="assets/uploads/kpis/<?php echo $k['imagen']; ?>" style="width:34px;height:34px;object-fit:cover;border-radius:6px;cursor:pointer;flex-shrink:0;" onclick="openImageModal('assets/uploads/kpis/<?php echo $k['imagen']; ?>','<?php echo htmlspecialchars($k['nombre'], ENT_QUOTES); ?>')">
-                        <?php else: ?>
-                        <div style="width:34px;height:34px;background:var(--accent-green);border-radius:6px;display:flex;align-items:center;justify-content:center;color:white;font-size:0.7rem;flex-shrink:0;"><i class="fas fa-chart-bar"></i></div>
-                        <?php endif; ?>
-                        <div style="flex:1;min-width:0;"><div style="font-size:0.74rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($k['nombre']); ?></div><div style="font-size:0.6rem;color:var(--text-muted);"><?php echo $mesesEsp[$k['mes']] ?? ''; ?> <?php echo $k['anio']; ?></div></div>
-                        <?php if ($k['archivo']): ?><a href="assets/uploads/kpis/<?php echo $k['archivo']; ?>" download style="color:var(--text-muted);font-size:0.75rem;" title="Descargar"><i class="fas fa-download"></i></a><?php endif; ?>
-                    </div>
-                    <?php endforeach; else: ?>
-                    <p style="color:var(--text-muted);font-size:0.8rem;padding:15px 0;">Sin KPIs para <?php echo $mesesEsp[(int)$kpiMes]; ?> <?php echo $kpiAnio; ?></p>
-                    <?php endif; ?>
-                </div>
-            </div>
-
             <!-- Conversor de Divisas -->
             <div class="section-card">
                 <div class="section-header"><i class="fas fa-exchange-alt"></i> Conversor de Divisas</div>
