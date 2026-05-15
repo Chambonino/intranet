@@ -281,9 +281,9 @@ body {
 }
 
 /* === Apps grid compacto === */
-.apps-grid-compact .app-card { min-height: 78px; aspect-ratio: 1; padding: 10px 4px !important; }
+.apps-grid-compact .app-card { min-height: 78px; aspect-ratio: 1; padding: 10px 4px !important; min-width: 0; }
 .apps-grid-compact .app-card i { margin-bottom: 4px; }
-.apps-grid-compact .app-card span { font-size: 0.62rem !important; line-height: 1.1; text-align: center; }
+.apps-grid-compact .app-card span { font-size: 0.62rem !important; line-height: 1.1; text-align: center; padding: 0 2px; word-break: break-word; overflow-wrap: anywhere; }
 
 /* ============================================
    SECTION CARD

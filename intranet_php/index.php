@@ -251,6 +251,28 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 </div>
             </div>
 
+            <!-- Secciones extra (Historia, Objetivos, Política Integral, Reconocimientos) -->
+            <?php
+            $extraSecciones = ['historia','objetivos','politica_integral','reconocimientos'];
+            $iconosL = ['historia'=>'fa-landmark','objetivos'=>'fa-flag-checkered','politica_integral'=>'fa-shield-halved','reconocimientos'=>'fa-trophy'];
+            $coloresL = ['historia'=>'#E91E63','objetivos'=>'#00BCD4','politica_integral'=>'#9C27B0','reconocimientos'=>'#FFD700'];
+            $labelsL = ['historia'=>'Historia','objetivos'=>'Objetivos','politica_integral'=>'Política Integral','reconocimientos'=>'Reconocimientos'];
+            $mapL = [];
+            foreach ($infoCompania as $info) { $mapL[$info['seccion']] = $info; }
+            foreach ($extraSecciones as $sec):
+                if (!isset($mapL[$sec])) continue;
+                $info = $mapL[$sec];
+            ?>
+            <a href="compania_detalle.php?s=<?php echo $sec; ?>" class="section-card" style="text-decoration:none;color:inherit;padding:14px 16px;display:block;cursor:pointer;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <i class="fas <?php echo $iconosL[$sec]; ?>" style="color:<?php echo $coloresL[$sec]; ?>;font-size:0.95rem;"></i>
+                    <span style="color:<?php echo $coloresL[$sec]; ?>;font-weight:700;font-size:0.8rem;letter-spacing:0.5px;"><?php echo $labelsL[$sec]; ?></span>
+                    <i class="fas fa-chevron-right" style="margin-left:auto;font-size:0.65rem;color:var(--text-muted);"></i>
+                </div>
+                <p style="font-size:0.72rem;color:var(--text-secondary);line-height:1.45;margin:0;"><?php echo truncarTexto(strip_tags($info['contenido']), 110); ?></p>
+            </a>
+            <?php endforeach; ?>
+
         </div>
 
         <!-- ============ COLUMNA CENTRAL ============ -->
@@ -300,7 +322,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 <!-- Aplicaciones Rápidas (al lado) -->
                 <div class="section-card">
                     <div class="section-header"><i class="fas fa-th"></i> Aplicaciones Rápidas</div>
-                    <div class="apps-grid apps-grid-compact" style="padding:12px 14px;display:grid;grid-template-columns:repeat(6,1fr);gap:8px;">
+                    <div class="apps-grid apps-grid-compact" style="padding:12px 14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:8px;">
                         <?php if ($organigrama): ?>
                         <a href="javascript:void(0)" onclick="openImageModal('assets/uploads/company/<?php echo $organigrama['imagen']; ?>','Organigrama Corporativo')" class="app-card" style="background:#E53935;padding:14px 6px;font-size:0.7rem;"><i class="fas fa-sitemap" style="font-size:1.3rem;"></i><span style="font-size:0.65rem;">Organigrama</span></a>
                         <?php endif; ?>
@@ -343,10 +365,11 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 </div>
             </div>
 
-            <!-- Nuestra Compañía (3 cards horizontales: VALORES, VISION, MISION) -->
+            <!-- Nuestra Compañía (VALORES, VISION, MISION horizontales) -->
             <?php
-            $iconos=['mision'=>'fa-bullseye','vision'=>'fa-eye','valores'=>'fa-heart'];
-            $colores=['mision'=>'#E53935','vision'=>'#43A047','valores'=>'#FF9800'];
+            $iconos = ['mision'=>'fa-bullseye','vision'=>'fa-eye','valores'=>'fa-heart'];
+            $colores = ['mision'=>'#E53935','vision'=>'#43A047','valores'=>'#FF9800'];
+            $labels = ['mision'=>'MISION','vision'=>'VISION','valores'=>'VALORES'];
             $ordenSecciones = ['valores','vision','mision'];
             $infoCompaniaMap = [];
             foreach ($infoCompania as $info) { $infoCompaniaMap[$info['seccion']] = $info; }
@@ -358,8 +381,8 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 ?>
                 <a href="compania_detalle.php?s=<?php echo $info['seccion']; ?>" class="section-card" style="text-decoration:none;color:inherit;padding:14px 16px;display:block;cursor:pointer;">
                     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                        <i class="fas <?php echo $iconos[$sec] ?? 'fa-info-circle'; ?>" style="color:<?php echo $colores[$sec] ?? '#1976D2'; ?>;font-size:0.95rem;"></i>
-                        <span style="color:<?php echo $colores[$sec] ?? '#1976D2'; ?>;font-weight:700;font-size:0.78rem;letter-spacing:1px;"><?php echo strtoupper($sec); ?></span>
+                        <i class="fas <?php echo $iconos[$sec]; ?>" style="color:<?php echo $colores[$sec]; ?>;font-size:0.95rem;"></i>
+                        <span style="color:<?php echo $colores[$sec]; ?>;font-weight:700;font-size:0.78rem;letter-spacing:1px;"><?php echo $labels[$sec]; ?></span>
                         <i class="fas fa-chevron-right" style="margin-left:auto;font-size:0.65rem;color:var(--text-muted);"></i>
                     </div>
                     <p style="font-size:0.72rem;color:var(--text-secondary);line-height:1.45;"><?php echo truncarTexto(strip_tags($info['contenido']), 130); ?></p>
