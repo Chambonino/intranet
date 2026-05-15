@@ -255,24 +255,29 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
 
             <!-- Subgrid: Nuevos Ingresos (izquierda) + Aplicaciones Rápidas (derecha) -->
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-                <!-- Nuevos Ingresos (mini-slider, 1 visible) -->
+                <!-- Nuevos Ingresos (carrusel continuo, 2 visibles) -->
                 <div class="section-card">
                     <div class="section-header"><i class="fas fa-user-plus"></i> Nuevos Ingresos</div>
-                    <div style="position:relative;overflow:hidden;padding:12px 15px 15px;">
-                        <div id="bdTrack" class="auto-slider" data-step="1" data-interval="4000" style="display:flex;gap:12px;transition:transform 0.6s ease;" data-testid="nuevos-ingresos-track">
-                        <?php if (count($nuevosIngresos) > 0): foreach ($nuevosIngresos as $n):
+                    <div class="carousel-wrap" style="padding:12px 14px 14px;">
+                        <?php if (count($nuevosIngresos) > 0):
+                            // Duplicar para loop seamless
+                            $niLoop = count($nuevosIngresos) > 2 ? array_merge($nuevosIngresos, $nuevosIngresos) : $nuevosIngresos;
+                            $duration = max(20, count($nuevosIngresos) * 6); // 6s por card
+                        ?>
+                        <div class="carousel-track" style="--carousel-duration: <?php echo $duration; ?>s;" data-testid="nuevos-ingresos-track">
+                        <?php foreach ($niLoop as $n):
                             $fotoSrc = $n['foto'] ?: 'assets/img/default-avatar.svg';
                             $diasAtras = max(0, floor((time() - $n['fecha_ingreso_ts']) / 86400));
                         ?>
-                        <div class="mini-card" style="width:100%;flex:0 0 100%;background:linear-gradient(135deg,#0d47a1,#42a5f5);border-radius:12px;padding:16px 14px;text-align:center;color:white;cursor:pointer;" onclick="openNewHireCard('<?php echo htmlspecialchars($n['nombre'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($n['departamento'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($n['puesto'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($fotoSrc, ENT_QUOTES); ?>','<?php echo date('d M Y', $n['fecha_ingreso_ts']); ?>')">
-                            <img src="<?php echo htmlspecialchars($fotoSrc); ?>" style="width:58px;height:58px;border-radius:50%;object-fit:cover;border:3px solid white;margin-bottom:8px;" onerror="this.src='assets/img/default-avatar.svg'">
-                            <div style="font-weight:600;font-size:0.85rem;line-height:1.2;"><?php echo htmlspecialchars($n['nombre']); ?></div>
-                            <div style="font-size:0.7rem;opacity:0.9;margin-top:3px;"><?php echo htmlspecialchars($n['puesto'] ?: $n['departamento']); ?></div>
-                            <div style="font-size:0.65rem;opacity:0.85;margin-top:6px;background:rgba(255,255,255,0.18);border-radius:10px;padding:2px 8px;display:inline-block;"><i class="fas fa-clock"></i> <?php echo $diasAtras == 0 ? 'Hoy' : ($diasAtras . ' día' . ($diasAtras != 1 ? 's' : '')); ?></div>
+                        <div class="mini-card" style="width:178px;background:linear-gradient(135deg,#0d47a1,#42a5f5);border-radius:12px;padding:14px 10px;text-align:center;color:white;cursor:pointer;" onclick="openNewHireCard('<?php echo htmlspecialchars($n['nombre'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($n['departamento'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($n['puesto'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($fotoSrc, ENT_QUOTES); ?>','<?php echo date('d M Y', $n['fecha_ingreso_ts']); ?>')">
+                            <img src="<?php echo htmlspecialchars($fotoSrc); ?>" style="width:58px;height:58px;border-radius:50%;object-fit:cover;border:3px solid white;margin-bottom:7px;" onerror="this.src='assets/img/default-avatar.svg'">
+                            <div style="font-weight:600;font-size:0.78rem;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($n['nombre']); ?></div>
+                            <div style="font-size:0.65rem;opacity:0.9;margin-top:3px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($n['puesto'] ?: $n['departamento']); ?></div>
+                            <div style="font-size:0.58rem;opacity:0.85;margin-top:5px;background:rgba(255,255,255,0.18);border-radius:8px;padding:1px 7px;display:inline-block;"><i class="fas fa-clock"></i> <?php echo $diasAtras == 0 ? 'Hoy' : ($diasAtras . ' día' . ($diasAtras != 1 ? 's' : '')); ?></div>
                         </div>
-                        <?php endforeach; else: ?><p style="color:var(--text-muted);font-size:0.82rem;width:100%;text-align:center;">Sin nuevos ingresos</p><?php endif; ?>
+                        <?php endforeach; ?>
                         </div>
-                        <?php if (count($nuevosIngresos) > 1): ?><button onclick="slideTrack('bdTrack',-1)" style="position:absolute;left:2px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.75);border:none;color:white;width:24px;height:24px;border-radius:50%;cursor:pointer;z-index:5;font-size:0.7rem;"><i class="fas fa-chevron-left"></i></button><button onclick="slideTrack('bdTrack',1)" style="position:absolute;right:2px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.75);border:none;color:white;width:24px;height:24px;border-radius:50%;cursor:pointer;z-index:5;font-size:0.7rem;"><i class="fas fa-chevron-right"></i></button><?php endif; ?>
+                        <?php else: ?><p style="color:var(--text-muted);font-size:0.82rem;text-align:center;padding:30px 0;">Sin nuevos ingresos</p><?php endif; ?>
                     </div>
                 </div>
 
@@ -326,42 +331,51 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
 
         <!-- ============ COLUMNA DERECHA ============ -->
         <div class="col-side">
-            <!-- Aniversarios Laborales (2 visibles, auto-slide) -->
+
+            <!-- Aniversarios Laborales (carrusel continuo lento) -->
             <div class="section-card">
                 <div class="section-header"><i class="fas fa-award"></i> Aniversarios Laborales</div>
-                <div style="position:relative;overflow:hidden;padding:10px 28px 12px;">
-                    <div id="anivTrack" class="auto-slider" data-step="2" data-interval="5000" style="display:flex;gap:8px;transition:transform 0.6s ease;" data-testid="aniversarios-track">
-                    <?php if (count($aniversarios) > 0): foreach ($aniversarios as $a):
+                <div class="carousel-wrap" style="padding:10px 14px 12px;">
+                    <?php if (count($aniversarios) > 0):
+                        $anivLoop = count($aniversarios) > 2 ? array_merge($aniversarios, $aniversarios) : $aniversarios;
+                        $aDur = max(20, count($aniversarios) * 7);
+                    ?>
+                    <div class="carousel-track" style="--carousel-duration: <?php echo $aDur; ?>s;" data-testid="aniversarios-track">
+                    <?php foreach ($anivLoop as $a):
                         $fotoSrc = $a['foto'] ?: 'assets/img/default-avatar.svg';
                         $anos = $a['anos'];
                     ?>
-                    <div class="aniv-card mini-card" style="flex:0 0 calc(50% - 4px);min-width:0;background:linear-gradient(135deg,#1a237e,#3949ab);border-radius:11px;padding:10px 6px 12px;text-align:center;color:white;cursor:pointer;" onclick="openAnivCard('<?php echo htmlspecialchars($a['nombre'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($a['departamento'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($a['puesto'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($fotoSrc, ENT_QUOTES); ?>',<?php echo $anos; ?>)">
-                        <img src="<?php echo htmlspecialchars($fotoSrc); ?>" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:3px solid gold;margin-bottom:5px;" onerror="this.src='assets/img/default-avatar.svg'">
-                        <div style="font-weight:600;font-size:0.74rem;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($a['nombre']); ?></div>
-                        <div style="font-size:0.62rem;opacity:0.88;margin-top:3px;line-height:1.15;"><?php echo $anos; ?> año<?php echo $anos != 1 ? 's' : ''; ?> en la empresa</div>
-                        <div style="font-size:0.58rem;opacity:0.7;margin-top:2px;"><?php echo date('d', $a['fecha_ingreso_ts']); ?> de este mes</div>
+                    <div class="aniv-card mini-card" style="width:135px;background:linear-gradient(135deg,#1a237e,#3949ab);border-radius:11px;padding:10px 5px 11px;text-align:center;color:white;cursor:pointer;" onclick="openAnivCard('<?php echo htmlspecialchars($a['nombre'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($a['departamento'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($a['puesto'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($fotoSrc, ENT_QUOTES); ?>',<?php echo $anos; ?>)">
+                        <img src="<?php echo htmlspecialchars($fotoSrc); ?>" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:3px solid gold;margin-bottom:4px;" onerror="this.src='assets/img/default-avatar.svg'">
+                        <div style="font-weight:600;font-size:0.7rem;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px;"><?php echo htmlspecialchars($a['nombre']); ?></div>
+                        <div style="font-size:0.58rem;opacity:0.88;margin-top:2px;line-height:1.15;"><?php echo $anos; ?> año<?php echo $anos != 1 ? 's' : ''; ?> en la empresa</div>
+                        <div style="font-size:0.55rem;opacity:0.7;margin-top:1px;"><?php echo date('d', $a['fecha_ingreso_ts']); ?> de este mes</div>
                     </div>
-                    <?php endforeach; else: ?><p style="color:var(--text-muted);font-size:0.78rem;width:100%;text-align:center;">Sin aniversarios</p><?php endif; ?>
+                    <?php endforeach; ?>
                     </div>
-                    <?php if (count($aniversarios) > 2): ?><button onclick="slideTrack('anivTrack',-1)" style="position:absolute;left:2px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.75);border:none;color:white;width:22px;height:22px;border-radius:50%;cursor:pointer;z-index:5;font-size:0.65rem;"><i class="fas fa-chevron-left"></i></button><button onclick="slideTrack('anivTrack',1)" style="position:absolute;right:2px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.75);border:none;color:white;width:22px;height:22px;border-radius:50%;cursor:pointer;z-index:5;font-size:0.65rem;"><i class="fas fa-chevron-right"></i></button><?php endif; ?>
+                    <?php else: ?><p style="color:var(--text-muted);font-size:0.78rem;text-align:center;padding:20px 0;">Sin aniversarios</p><?php endif; ?>
                 </div>
             </div>
 
-            <!-- Cumpleaños del Mes (2 visibles, auto-slide) -->
+            <!-- Cumpleaños del Mes (carrusel continuo lento) -->
             <div class="section-card">
                 <div class="section-header"><i class="fas fa-birthday-cake"></i> Cumpleaños del Mes</div>
-                <div style="position:relative;overflow:hidden;padding:10px 28px 12px;">
-                    <div id="bdTrackR" class="auto-slider" data-step="2" data-interval="5000" style="display:flex;gap:8px;transition:transform 0.6s ease;">
-                    <?php if (count($allBirthdays) > 0): foreach ($allBirthdays as $c): ?>
-                    <div class="mini-card" style="flex:0 0 calc(50% - 4px);min-width:0;background:linear-gradient(135deg,#0d47a1,#42a5f5);border-radius:11px;padding:10px 6px 12px;text-align:center;color:white;cursor:pointer;" onclick="openBirthdayCard('<?php echo htmlspecialchars($c['nombre_completo'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($c['departamento_nombre'] ?? '', ENT_QUOTES); ?>','<?php echo htmlspecialchars($c['puesto'] ?? '', ENT_QUOTES); ?>','assets/uploads/employees/<?php echo $c['foto'] ?: 'default.png'; ?>')">
-                        <img src="assets/uploads/employees/<?php echo $c['foto'] ?: 'default.png'; ?>" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:3px solid white;margin-bottom:5px;" onerror="this.src='assets/img/default-avatar.svg'">
-                        <div style="font-weight:600;font-size:0.74rem;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($c['nombre_completo']); ?></div>
-                        <div style="font-size:0.62rem;opacity:0.9;margin-top:3px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($c['puesto'] ?? $c['departamento_nombre'] ?? ''); ?></div>
-                        <div style="font-size:0.58rem;opacity:0.8;margin-top:3px;background:rgba(255,255,255,0.18);border-radius:8px;padding:1px 6px;display:inline-block;"><?php echo date('d', strtotime($c['fecha_nacimiento'])); ?> de este mes</div>
+                <div class="carousel-wrap" style="padding:10px 14px 12px;">
+                    <?php if (count($allBirthdays) > 0):
+                        $bdLoop = count($allBirthdays) > 2 ? array_merge($allBirthdays, $allBirthdays) : $allBirthdays;
+                        $bdDur = max(20, count($allBirthdays) * 7);
+                    ?>
+                    <div class="carousel-track" style="--carousel-duration: <?php echo $bdDur; ?>s;">
+                    <?php foreach ($bdLoop as $c): ?>
+                    <div class="mini-card" style="width:135px;background:linear-gradient(135deg,#0d47a1,#42a5f5);border-radius:11px;padding:10px 5px 11px;text-align:center;color:white;cursor:pointer;" onclick="openBirthdayCard('<?php echo htmlspecialchars($c['nombre_completo'], ENT_QUOTES); ?>','<?php echo htmlspecialchars($c['departamento_nombre'] ?? '', ENT_QUOTES); ?>','<?php echo htmlspecialchars($c['puesto'] ?? '', ENT_QUOTES); ?>','assets/uploads/employees/<?php echo $c['foto'] ?: 'default.png'; ?>')">
+                        <img src="assets/uploads/employees/<?php echo $c['foto'] ?: 'default.png'; ?>" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:3px solid white;margin-bottom:4px;" onerror="this.src='assets/img/default-avatar.svg'">
+                        <div style="font-weight:600;font-size:0.7rem;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px;"><?php echo htmlspecialchars($c['nombre_completo']); ?></div>
+                        <div style="font-size:0.58rem;opacity:0.9;margin-top:2px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px;"><?php echo htmlspecialchars($c['puesto'] ?? $c['departamento_nombre'] ?? ''); ?></div>
+                        <div style="font-size:0.55rem;opacity:0.85;margin-top:3px;background:rgba(255,255,255,0.18);border-radius:7px;padding:1px 5px;display:inline-block;"><?php echo date('d', strtotime($c['fecha_nacimiento'])); ?> de este mes</div>
                     </div>
-                    <?php endforeach; else: ?><p style="color:var(--text-muted);font-size:0.78rem;width:100%;text-align:center;">Sin cumpleaños</p><?php endif; ?>
+                    <?php endforeach; ?>
                     </div>
-                    <?php if (count($allBirthdays) > 2): ?><button onclick="slideTrack('bdTrackR',-1)" style="position:absolute;left:2px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.75);border:none;color:white;width:22px;height:22px;border-radius:50%;cursor:pointer;z-index:5;font-size:0.65rem;"><i class="fas fa-chevron-left"></i></button><button onclick="slideTrack('bdTrackR',1)" style="position:absolute;right:2px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.75);border:none;color:white;width:22px;height:22px;border-radius:50%;cursor:pointer;z-index:5;font-size:0.65rem;"><i class="fas fa-chevron-right"></i></button><?php endif; ?>
+                    <?php else: ?><p style="color:var(--text-muted);font-size:0.78rem;text-align:center;padding:20px 0;">Sin cumpleaños</p><?php endif; ?>
                 </div>
             </div>
 

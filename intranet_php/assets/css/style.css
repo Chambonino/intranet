@@ -265,6 +265,21 @@ body {
 .mini-card { transition: transform 0.3s; }
 .mini-card:hover { transform: scale(1.03); }
 
+/* === Carrusel continuo lento (marquee) === */
+.carousel-wrap { position: relative; overflow: hidden; }
+.carousel-track {
+    display: flex;
+    gap: 10px;
+    width: max-content;
+    animation: carousel-scroll var(--carousel-duration, 30s) linear infinite;
+}
+.carousel-track:hover { animation-play-state: paused; }
+.carousel-track > * { flex-shrink: 0; }
+@keyframes carousel-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(calc(-1 * var(--carousel-half-width, 50%))); }
+}
+
 /* === Apps grid compacto === */
 .apps-grid-compact .app-card { min-height: 78px; aspect-ratio: 1; padding: 10px 4px !important; }
 .apps-grid-compact .app-card i { margin-bottom: 4px; }
