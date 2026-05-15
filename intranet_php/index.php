@@ -91,6 +91,33 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
     @keyframes carousel-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
     .carousel-wrap { position: relative; overflow: hidden; }
     .carousel-track:hover { animation-play-state: paused !important; }
+
+    /* === Animaciones del Modal Cumpleaños === */
+    .bd-confetti-layer, .bd-balloons-layer { position: absolute; top:0; left:0; right:0; bottom:0; overflow: hidden; pointer-events: none; z-index: 1; }
+    .bd-confetti { position: absolute; border-radius: 2px; animation: bd-fall linear infinite; opacity: 0.95; }
+    @keyframes bd-fall {
+        0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+    .bd-balloon { position: absolute; bottom: -150px; width: 60px; height: 76px; border-radius: 50% 50% 50% 50% / 55% 55% 45% 45%; box-shadow: inset -5px -10px 15px rgba(0,0,0,0.15); animation: bd-rise ease-in infinite; }
+    .bd-balloon-string { position: absolute; top: 100%; left: 50%; width: 1.5px; height: 80px; background: rgba(255,255,255,0.4); }
+    @keyframes bd-rise {
+        0%   { transform: translateY(0) translateX(0) rotate(-3deg); opacity: 0; }
+        15%  { opacity: 0.95; }
+        50%  { transform: translateY(-50vh) translateX(20px) rotate(3deg); }
+        100% { transform: translateY(-110vh) translateX(-15px) rotate(-2deg); opacity: 0; }
+    }
+    .bd-cake-wrap { animation: bd-bounce 1.5s ease-in-out infinite; }
+    @keyframes bd-bounce {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50%      { transform: translateY(-8px) scale(1.08); }
+    }
+    @keyframes bd-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .bd-modal-card { animation: bd-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    @keyframes bd-pop {
+        from { transform: scale(0.6); opacity: 0; }
+        to   { transform: scale(1); opacity: 1; }
+    }
     </style>
     <style>
     /* Countdown animation */
@@ -224,23 +251,6 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 </div>
             </div>
 
-            <!-- Nuestra Compañía -->
-            <div class="section-card">
-                <div class="section-header"><i class="fas fa-building"></i> Nuestra Compañía</div>
-                <div class="company-body" style="padding:15px;">
-                    <p class="company-desc" style="font-size:0.8rem;">Empresa automotriz dedicada a la inyección, cromado y pintura de piezas plásticas automotrices.</p>
-                    <?php $iconos=['mision'=>'fa-bullseye','vision'=>'fa-eye','valores'=>'fa-heart']; $colores=['mision'=>'#E53935','vision'=>'#43A047','valores'=>'#FF9800'];
-                    foreach ($infoCompania as $info): ?>
-                    <a href="compania_detalle.php?s=<?php echo $info['seccion']; ?>" style="text-decoration:none;color:inherit;display:block;margin-top:8px;" class="company-value">
-                        <div class="company-value-header" style="font-size:0.78rem;"><i class="fas <?php echo $iconos[$info['seccion']] ?? 'fa-info-circle'; ?>" style="color:<?php echo $colores[$info['seccion']] ?? '#1976D2'; ?>;"></i><span style="color:<?php echo $colores[$info['seccion']] ?? '#1976D2'; ?>;"><?php echo strtoupper($info['seccion']); ?></span>
-                        <?php if (!empty($info['archivo_pdf'])): ?><span style="margin-left:auto;font-size:0.65rem;color:var(--accent-blue);"><i class="fas fa-file-pdf"></i> PDF</span><?php endif; ?>
-                        <i class="fas fa-chevron-right" style="margin-left:auto;font-size:0.65rem;color:var(--text-muted);"></i>
-                        </div>
-                        <p style="font-size:0.72rem;"><?php echo truncarTexto(strip_tags($info['contenido']), 100); ?></p>
-                    </a>
-                    <?php endforeach; ?>
-                </div>
-            </div>
         </div>
 
         <!-- ============ COLUMNA CENTRAL ============ -->
@@ -331,6 +341,30 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                     <?php if ($totalArtPages > 1): ?><div style="display:flex;justify-content:center;gap:5px;margin-top:15px;"><?php for ($p = 1; $p <= $totalArtPages; $p++): ?><a href="?art_page=<?php echo $p; ?>" style="padding:5px 12px;border-radius:6px;font-size:0.8rem;text-decoration:none;<?php echo $p == $artPage ? 'background:var(--accent-red);color:white;' : 'background:var(--bg-input);color:var(--text-secondary);'; ?>"><?php echo $p; ?></a><?php endfor; ?></div><?php endif; ?>
                     <?php else: ?><p style="color:var(--text-muted);">Sin noticias</p><?php endif; ?>
                 </div>
+            </div>
+
+            <!-- Nuestra Compañía (3 cards horizontales: VALORES, VISION, MISION) -->
+            <?php
+            $iconos=['mision'=>'fa-bullseye','vision'=>'fa-eye','valores'=>'fa-heart'];
+            $colores=['mision'=>'#E53935','vision'=>'#43A047','valores'=>'#FF9800'];
+            $ordenSecciones = ['valores','vision','mision'];
+            $infoCompaniaMap = [];
+            foreach ($infoCompania as $info) { $infoCompaniaMap[$info['seccion']] = $info; }
+            ?>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+                <?php foreach ($ordenSecciones as $sec):
+                    if (!isset($infoCompaniaMap[$sec])) continue;
+                    $info = $infoCompaniaMap[$sec];
+                ?>
+                <a href="compania_detalle.php?s=<?php echo $info['seccion']; ?>" class="section-card" style="text-decoration:none;color:inherit;padding:14px 16px;display:block;cursor:pointer;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                        <i class="fas <?php echo $iconos[$sec] ?? 'fa-info-circle'; ?>" style="color:<?php echo $colores[$sec] ?? '#1976D2'; ?>;font-size:0.95rem;"></i>
+                        <span style="color:<?php echo $colores[$sec] ?? '#1976D2'; ?>;font-weight:700;font-size:0.78rem;letter-spacing:1px;"><?php echo strtoupper($sec); ?></span>
+                        <i class="fas fa-chevron-right" style="margin-left:auto;font-size:0.65rem;color:var(--text-muted);"></i>
+                    </div>
+                    <p style="font-size:0.72rem;color:var(--text-secondary);line-height:1.45;"><?php echo truncarTexto(strip_tags($info['contenido']), 130); ?></p>
+                </a>
+                <?php endforeach; ?>
             </div>
 
         </div>
@@ -625,6 +659,65 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
 
     function openAnivCard(name,dept,puesto,foto,anos){let m=document.getElementById('anivM');if(!m){m=document.createElement('div');m.id='anivM';m.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;';m.addEventListener('click',function(e){if(e.target===m)m.style.display='none';});document.body.appendChild(m);}
     m.innerHTML='<div style="background:linear-gradient(135deg,#1a237e,#283593);border-radius:20px;padding:40px;text-align:center;max-width:400px;color:white;position:relative;"><button onclick="document.getElementById(\'anivM\').style.display=\'none\'" style="position:absolute;top:10px;right:15px;background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;"><i class="fas fa-times"></i></button><div style="font-size:3rem;margin-bottom:15px;">&#127942;</div><img src="'+foto+'" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:4px solid gold;margin-bottom:15px;" onerror="this.src=\'assets/img/default-avatar.svg\'"><h2 style="margin-bottom:5px;">'+name+'</h2><p style="opacity:0.9;">'+puesto+'</p><p style="opacity:0.8;font-size:0.9rem;">'+dept+'</p><div style="font-size:2.5rem;font-weight:800;margin:15px 0;color:gold;">'+anos+' A\u00f1o'+(anos!=1?'s':'')+'</div><div style="padding:15px;background:rgba(255,255,255,0.2);border-radius:10px;font-style:italic;">\u00a1Felicidades '+name.split(' ')[0]+' por tu aniversario en la empresa!</div></div>';m.style.display='flex';}
+
+    // ====== Birthday card modal ANIMADO con confeti y globos ======
+    function openBirthdayCard(name, dept, puesto, foto) {
+        let m = document.getElementById('birthM');
+        if (!m) {
+            m = document.createElement('div');
+            m.id = 'birthM';
+            m.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;overflow:hidden;';
+            m.addEventListener('click', function(e) { if (e.target === m) { m.style.display = 'none'; clearBirthdayAnimations(); } });
+            document.body.appendChild(m);
+        }
+        // Generar confeti (50 piezas)
+        var confettiHtml = '';
+        var colors = ['#FFD700','#FF69B4','#00CED1','#FF6347','#7CFC00','#FFA500','#9370DB','#FF1493','#00FFFF','#FFFF00'];
+        for (var i = 0; i < 60; i++) {
+            var c = colors[Math.floor(Math.random() * colors.length)];
+            var left = Math.random() * 100;
+            var delay = Math.random() * 3;
+            var dur = 3 + Math.random() * 3;
+            var rot = Math.random() * 360;
+            var size = 6 + Math.random() * 8;
+            confettiHtml += '<div class="bd-confetti" style="left:' + left + '%;top:-20px;width:' + size + 'px;height:' + size + 'px;background:' + c + ';animation-delay:' + delay + 's;animation-duration:' + dur + 's;transform:rotate(' + rot + 'deg);"></div>';
+        }
+        // Globos (5)
+        var balloonsHtml = '';
+        var bColors = ['#FF1744','#2196F3','#FFD600','#00C853','#E040FB'];
+        for (var j = 0; j < 5; j++) {
+            var bc = bColors[j];
+            var bL = 10 + j * 18 + Math.random() * 5;
+            var bDelay = j * 0.4;
+            var bDur = 6 + Math.random() * 3;
+            balloonsHtml += '<div class="bd-balloon" style="left:' + bL + '%;background:radial-gradient(circle at 30% 30%, ' + bc + 'cc, ' + bc + ');animation-delay:' + bDelay + 's;animation-duration:' + bDur + 's;"><div class="bd-balloon-string"></div></div>';
+        }
+
+        m.innerHTML =
+            '<div class="bd-confetti-layer">' + confettiHtml + '</div>' +
+            '<div class="bd-balloons-layer">' + balloonsHtml + '</div>' +
+            '<div class="bd-modal-card" style="position:relative;z-index:2;background:linear-gradient(135deg,#e91e63,#9c27b0);border-radius:24px;padding:40px 35px;text-align:center;max-width:430px;color:white;box-shadow:0 25px 60px rgba(233,30,99,0.6);">' +
+                '<button onclick="document.getElementById(\'birthM\').style.display=\'none\';clearBirthdayAnimations();" style="position:absolute;top:12px;right:18px;background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;z-index:3;"><i class="fas fa-times"></i></button>' +
+                '<div class="bd-cake-wrap" style="font-size:3.5rem;margin-bottom:8px;line-height:1;"><i class="fas fa-birthday-cake" style="color:#FFE082;text-shadow:0 0 25px rgba(255,224,130,0.7);"></i></div>' +
+                '<div style="font-size:0.92rem;font-weight:700;letter-spacing:2px;color:#FFE082;margin-bottom:18px;text-transform:uppercase;">¡Feliz Cumpleaños!</div>' +
+                '<div style="position:relative;display:inline-block;margin-bottom:14px;">' +
+                    '<img src="' + foto + '" style="width:115px;height:115px;border-radius:50%;object-fit:cover;border:5px solid #FFE082;box-shadow:0 0 30px rgba(255,224,130,0.5);" onerror="this.src=\'assets/img/default-avatar.svg\'">' +
+                    '<div style="position:absolute;top:-12px;right:-12px;background:#FFE082;color:#9c27b0;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;animation:bd-spin 3s linear infinite;"><i class="fas fa-gift"></i></div>' +
+                '</div>' +
+                '<h2 style="margin-bottom:4px;font-size:1.45rem;">' + name + '</h2>' +
+                (puesto ? '<p style="opacity:0.95;font-size:0.88rem;">' + puesto + '</p>' : '') +
+                (dept ? '<p style="opacity:0.85;font-size:0.78rem;margin-bottom:8px;"><i class="fas fa-building"></i> ' + dept + '</p>' : '') +
+                '<div style="margin-top:18px;padding:16px 18px;background:rgba(255,255,255,0.2);border-radius:14px;font-style:italic;line-height:1.5;font-size:0.92rem;">' +
+                    '¡Te deseamos un día lleno de alegría, ' + name.split(' ')[0] + '! 🎉<br>' +
+                    'Que este nuevo año traiga éxitos, salud y mucha felicidad.' +
+                '</div>' +
+            '</div>';
+        m.style.display = 'flex';
+    }
+    function clearBirthdayAnimations() {
+        var m = document.getElementById('birthM');
+        if (m) { m.querySelectorAll('.bd-confetti, .bd-balloon').forEach(function(el) { el.remove(); }); }
+    }
 
     // AUTO-SLIDER para galerías y videos
     function autoSlide(trackId, intervalMs) {
