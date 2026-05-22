@@ -484,7 +484,30 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                         <div style="width:34px;height:34px;background:var(--accent-green);border-radius:6px;display:flex;align-items:center;justify-content:center;color:white;font-size:0.7rem;flex-shrink:0;"><i class="fas fa-chart-bar"></i></div>
                         <?php endif; ?>
                         <div style="flex:1;min-width:0;"><div style="font-size:0.74rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($k['nombre']); ?></div><div style="font-size:0.6rem;color:var(--text-muted);"><?php echo $mesesEsp[$k['mes']] ?? ''; ?> <?php echo $k['anio']; ?></div></div>
-                        <?php if ($k['archivo']): ?><a href="assets/uploads/kpis/<?php echo $k['archivo']; ?>" download style="color:var(--text-muted);font-size:0.75rem;" title="Descargar"><i class="fas fa-download"></i></a><?php endif; ?>
+                        <?php
+                        // Mostrar enlace al archivo (URL externa preferida; fallback archivo subido)
+                        $kpiUrl = !empty($k['url_externa']) ? $k['url_externa'] : (!empty($k['archivo']) ? 'assets/uploads/kpis/' . $k['archivo'] : '');
+                        if ($kpiUrl):
+                            $esUNC = (strpos($kpiUrl, '\\\\') === 0 || strpos($kpiUrl, 'file://') === 0);
+                            // Detectar extensión para icono
+                            $kpiExt = strtolower(pathinfo(parse_url($kpiUrl, PHP_URL_PATH) ?: $kpiUrl, PATHINFO_EXTENSION));
+                            $kpiIcon = 'fa-file';
+                            if ($kpiExt === 'pdf') $kpiIcon = 'fa-file-pdf';
+                            elseif (in_array($kpiExt, ['xls','xlsx','csv'])) $kpiIcon = 'fa-file-excel';
+                            elseif (in_array($kpiExt, ['doc','docx'])) $kpiIcon = 'fa-file-word';
+                            elseif (in_array($kpiExt, ['ppt','pptx'])) $kpiIcon = 'fa-file-powerpoint';
+                            elseif (in_array($kpiExt, ['jpg','jpeg','png','gif'])) $kpiIcon = 'fa-file-image';
+                        ?>
+                            <?php if ($esUNC): ?>
+                                <button type="button" onclick="copyKpiPath(this, '<?php echo htmlspecialchars(addslashes($kpiUrl), ENT_QUOTES); ?>')" data-testid="kpi-copy-<?php echo $k['id']; ?>" style="color:var(--accent-blue);font-size:0.75rem;background:rgba(25,118,210,0.15);border:1px solid rgba(25,118,210,0.4);border-radius:6px;padding:4px 8px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;" title="Copiar ruta UNC al portapapeles (pégala en el explorador de Windows)">
+                                    <i class="fas <?php echo $kpiIcon; ?>"></i> <span style="font-size:0.65rem;">Copiar ruta</span>
+                                </button>
+                            <?php else: ?>
+                                <a href="<?php echo htmlspecialchars($kpiUrl); ?>" target="_blank" rel="noopener" data-testid="kpi-open-<?php echo $k['id']; ?>" style="color:var(--accent-blue);font-size:0.85rem;background:rgba(25,118,210,0.15);border:1px solid rgba(25,118,210,0.4);border-radius:6px;padding:5px 10px;display:inline-flex;align-items:center;gap:5px;text-decoration:none;" title="Abrir archivo en el file server">
+                                    <i class="fas <?php echo $kpiIcon; ?>"></i> <span style="font-size:0.65rem;">Abrir</span>
+                                </a>
+                            <?php endif; ?>
+                        <?php endif; ?>
                     </div>
                     <?php endforeach; else: ?>
                     <p style="color:var(--text-muted);font-size:0.8rem;padding:15px 0;">Sin KPIs para <?php echo $mesesEsp[(int)$kpiMes]; ?> <?php echo $kpiAnio; ?></p>
@@ -553,6 +576,29 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
     <footer class="footer"><p>&copy; <?php echo date('Y'); ?> Automotriz Corp. | <a href="admin/login.php" style="color:var(--text-muted);text-decoration:none;">Administraci&oacute;n</a></p></footer>
 
     <script>
+    // ====== Copiar ruta UNC al portapapeles (KPIs en file server) ======
+    function copyKpiPath(btn, path) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(path).then(function() { showCopiedFeedback(btn); }, function() { fallbackCopy(path, btn); });
+        } else { fallbackCopy(path, btn); }
+    }
+    function fallbackCopy(text, btn) {
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); showCopiedFeedback(btn); } catch (e) { alert('No se pudo copiar. Ruta:\n' + text); }
+        document.body.removeChild(ta);
+    }
+    function showCopiedFeedback(btn) {
+        var prev = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> <span style="font-size:0.65rem;">¡Copiado!</span>';
+        btn.style.background = 'rgba(46,125,50,0.25)'; btn.style.borderColor = 'rgba(46,125,50,0.6)'; btn.style.color = '#66bb6a';
+        setTimeout(function() {
+            btn.innerHTML = prev;
+            btn.style.background = 'rgba(25,118,210,0.15)'; btn.style.borderColor = 'rgba(25,118,210,0.4)'; btn.style.color = 'var(--accent-blue)';
+        }, 1800);
+    }
+
     // ====== ENCUESTA WIDGET ======
     function votarEncuesta(e) {
         e.preventDefault();
