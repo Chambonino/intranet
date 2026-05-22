@@ -6,6 +6,11 @@ require_once 'includes/config.php';
 require_once 'includes/functions.php';
 require_once 'includes/ad_helper.php';
 
+// Anti-cache: garantiza que cambios admin (encuestas, eventos, etc.) se vean inmediatamente
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 $sliderNoticias = getSliderNoticias($pdo);
 $aplicaciones = getAplicaciones($pdo);
 $departamentos = getDepartamentos($pdo);
@@ -29,13 +34,8 @@ $aniversarios   = getAniversariosAD();        // aniversarios de este mes
 // === ENCUESTA ACTIVA ===
 $encuestaActiva = getEncuestaActiva($pdo);
 
-// Eventos paginados
-$evPage = max(1, (int)($_GET['ev_page'] ?? 1));
-$evPerPage = 4; $evOffset = ($evPage - 1) * $evPerPage;
-$totalEventos = $pdo->query("SELECT COUNT(*) FROM eventos WHERE activo = 1")->fetchColumn();
-$totalEvPages = max(1, ceil($totalEventos / $evPerPage));
-$stmtEv = $pdo->prepare("SELECT e.*, d.nombre as dept_nombre, d.color as dept_color FROM eventos e LEFT JOIN departamentos d ON e.departamento_id = d.id WHERE e.activo = 1 ORDER BY e.fecha_evento DESC LIMIT ? OFFSET ?");
-$stmtEv->execute([$evPerPage, $evOffset]);
+// Eventos: TODOS para marquee vertical (scroll abajo→arriba), sin paginación
+$stmtEv = $pdo->query("SELECT e.*, d.nombre as dept_nombre, d.color as dept_color FROM eventos e LEFT JOIN departamentos d ON e.departamento_id = d.id WHERE e.activo = 1 ORDER BY e.fecha_evento DESC LIMIT 30");
 $eventosPage = $stmtEv->fetchAll();
 
 // Artículos paginados
@@ -89,8 +89,10 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
     <style>
     /* Keyframes inline para garantizar que funcione sin depender del CSS externo */
     @keyframes carousel-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    @keyframes ev-scroll-up { from { transform: translateY(0); } to { transform: translateY(-50%); } }
     .carousel-wrap { position: relative; overflow: hidden; }
     .carousel-track:hover { animation-play-state: paused !important; }
+    .ev-marquee-track:hover { animation-play-state: paused !important; }
 
     /* === Animaciones del Modal Cumpleaños === */
     .bd-confetti-layer, .bd-balloons-layer { position: absolute; top:0; left:0; right:0; bottom:0; overflow: hidden; pointer-events: none; z-index: 1; }
@@ -193,20 +195,30 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
 
         <!-- ============ COLUMNA IZQUIERDA ============ -->
         <div class="col-side">
-            <!-- Eventos -->
+            <!-- Eventos (scroll vertical lento, abajo → arriba) -->
             <div class="section-card">
                 <div class="section-header" style="justify-content:space-between;"><span><i class="fas fa-calendar-check"></i> Eventos</span><a href="calendario.php" style="font-size:0.7rem;color:var(--accent-blue);text-decoration:none;">Ver calendario completo <i class="fas fa-arrow-right"></i></a></div>
-                <div style="padding:12px 15px 15px;">
-                    <?php foreach ($eventosPage as $ev): $isPast = strtotime($ev['fecha_evento']) < strtotime('today'); ?>
-                    <div onclick="openEventModal(<?php echo $ev['id']; ?>)" style="cursor:pointer;text-decoration:none;color:inherit;display:flex;gap:10px;padding:10px;background:var(--bg-input);border-radius:8px;margin-bottom:8px;border-left:4px solid <?php echo $ev['dept_color'] ?: $ev['color']; ?>;<?php echo $isPast ? 'opacity:0.6;' : ''; ?>transition:background 0.3s;" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background='var(--bg-input)'">
+                <?php if (count($eventosPage) > 0):
+                    // Duplicar para loop seamless si hay > 3 eventos
+                    $evLoop = count($eventosPage) > 3 ? array_merge($eventosPage, $eventosPage) : $eventosPage;
+                    $evDur = max(20, count($eventosPage) * 5); // 5s por evento
+                ?>
+                <div class="ev-marquee" style="height:340px;overflow:hidden;padding:12px 15px;position:relative;">
+                    <div class="ev-marquee-track" style="display:flex;flex-direction:column;gap:8px;animation:ev-scroll-up <?php echo $evDur; ?>s linear infinite;">
+                    <?php foreach ($evLoop as $ev):
+                        $isPast = strtotime($ev['fecha_evento']) < strtotime('today');
+                    ?>
+                    <div onclick="openEventModal(<?php echo $ev['id']; ?>)" style="cursor:pointer;flex-shrink:0;color:inherit;display:flex;gap:10px;padding:10px;background:var(--bg-input);border-radius:8px;border-left:4px solid <?php echo $ev['dept_color'] ?: ($ev['color'] ?? '#1976d2'); ?>;<?php echo $isPast ? 'opacity:0.6;' : ''; ?>transition:background 0.3s;" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background='var(--bg-input)'">
                         <div class="evento-fecha"><span class="dia"><?php echo date('d', strtotime($ev['fecha_evento'])); ?></span><span class="mes"><?php echo strtoupper(substr($mesesEsp[(int)date('m', strtotime($ev['fecha_evento']))], 0, 3)); ?></span></div>
                         <div style="flex:1;min-width:0;"><h5 style="font-size:0.8rem;font-weight:600;"><?php echo htmlspecialchars($ev['titulo']); ?></h5><p style="font-size:0.68rem;color:var(--text-muted);"><?php if ($ev['hora_inicio']): ?><i class="fas fa-clock"></i> <?php echo date('H:i', strtotime($ev['hora_inicio'])); ?> <?php endif; ?><?php if ($ev['lugar']): ?><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($ev['lugar']); ?><?php endif; ?> <?php if ($ev['dept_nombre']): ?>&bull; <?php echo htmlspecialchars($ev['dept_nombre']); ?><?php endif; ?></p></div>
                         <?php if ($isPast): ?><span style="font-size:0.6rem;color:var(--text-muted);align-self:center;">Pasado</span><?php endif; ?>
                     </div>
                     <?php endforeach; ?>
-                    <?php if ($totalEvPages > 1): ?><div style="display:flex;justify-content:center;gap:5px;margin-top:10px;"><?php for ($p = 1; $p <= $totalEvPages; $p++): ?><a href="?ev_page=<?php echo $p; ?>" style="padding:4px 10px;border-radius:6px;font-size:0.75rem;text-decoration:none;<?php echo $p == $evPage ? 'background:var(--accent-red);color:white;' : 'background:var(--bg-input);color:var(--text-secondary);'; ?>"><?php echo $p; ?></a><?php endfor; ?></div><?php endif; ?>
-                    <?php if (count($eventosPage) === 0): ?><p style="color:var(--text-muted);font-size:0.8rem;">Sin eventos</p><?php endif; ?>
+                    </div>
                 </div>
+                <?php else: ?>
+                <div style="padding:25px 15px;"><p style="color:var(--text-muted);font-size:0.8rem;text-align:center;">Sin eventos</p></div>
+                <?php endif; ?>
             </div>
 
             <!-- Countdown -->

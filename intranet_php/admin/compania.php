@@ -59,6 +59,7 @@ $secciones = $pdo->query("SELECT * FROM info_compania WHERE activo = 1 ORDER BY 
     <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/lang/summernote-es-ES.min.js"></script>
 </head>
 <body>
     <div class="admin-wrapper">
@@ -129,7 +130,59 @@ $secciones = $pdo->query("SELECT * FROM info_compania WHERE activo = 1 ORDER BY 
         </main>
     </div>
     <script>
-    $('.sn-editor').summernote({height:150,toolbar:[['style',['bold','italic','underline']],['para',['ul','ol']],['insert',['link']]]});
+    $('.sn-editor').summernote({
+        height: 250,
+        lang: 'es-ES',
+        toolbar: [
+            ['style', ['style']],
+            ['font', ['bold', 'italic', 'underline', 'strikethrough', 'clear']],
+            ['fontname', ['fontname']],
+            ['fontsize', ['fontsize']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['height', ['height']],
+            ['insert', ['link', 'picture', 'video', 'table', 'hr']],
+            ['view', ['fullscreen', 'codeview', 'help']]
+        ],
+        fontNames: ['Arial', 'Calibri', 'Cambria', 'Comic Sans MS', 'Courier New', 'Georgia', 'Helvetica', 'Impact', 'Lucida Console', 'Roboto', 'Segoe UI', 'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana'],
+        fontNamesIgnoreCheck: ['Roboto', 'Segoe UI'],
+        fontSizes: ['8', '9', '10', '11', '12', '14', '16', '18', '20', '24', '28', '32', '36', '48', '64'],
+        callbacks: {
+            onImageUpload: function(files) {
+                for (var i = 0; i < files.length; i++) {
+                    uploadCompanyImage(files[i], this);
+                }
+            }
+        }
+    });
+    // Cargar idioma español de Summernote
+    $.fn.summernote.lang['es-ES'] = $.fn.summernote.lang['es-ES'] || $.fn.summernote.lang['en-US'];
+
+    function uploadCompanyImage(file, editor) {
+        var data = new FormData();
+        data.append('file', file);
+        data.append('folder', 'company');
+        $.ajax({
+            url: '../api/upload_image.php',
+            method: 'POST',
+            data: data,
+            processData: false,
+            contentType: false,
+            success: function(res) {
+                try {
+                    var r = typeof res === 'string' ? JSON.parse(res) : res;
+                    if (r.url) {
+                        // Guardar URL relativa al sitio (sin ../), funciona en compania_detalle.php raíz
+                        var imgUrl = 'assets/uploads/company/' + r.filename;
+                        $(editor).summernote('insertImage', imgUrl);
+                    } else {
+                        alert('Error al subir: ' + (r.error || 'desconocido'));
+                    }
+                } catch (e) { alert('Error procesando respuesta'); }
+            },
+            error: function() { alert('Error subiendo imagen'); }
+        });
+    }
     </script>
 </body>
 </html>

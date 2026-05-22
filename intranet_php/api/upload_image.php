@@ -13,22 +13,23 @@ if (!isLoggedIn()) {
 
 if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
     $ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
-    
+    $folder = $_POST['folder'] ?? $_GET['folder'] ?? 'articles';
+    // Validar carpeta segura (no permitir paths con / o ..)
+    if (!preg_match('/^[a-z0-9_-]+$/i', $folder)) { $folder = 'articles'; }
+
     // Determinar carpeta según tipo
     $imgTypes = ['jpg','jpeg','png','gif','webp'];
     $docTypes = ['pdf','doc','docx','xls','xlsx','ppt','pptx'];
-    
+
     if (in_array($ext, $imgTypes)) {
-        $result = uploadFile($_FILES['file'], 'articles', $imgTypes);
-        $folder = 'articles';
+        $result = uploadFile($_FILES['file'], $folder, $imgTypes);
     } elseif (in_array($ext, $docTypes)) {
-        $result = uploadFile($_FILES['file'], 'articles', $docTypes);
-        $folder = 'articles';
+        $result = uploadFile($_FILES['file'], $folder, $docTypes);
     } else {
         echo json_encode(['error' => 'Tipo de archivo no permitido. Use: ' . implode(', ', array_merge($imgTypes, $docTypes))]);
         exit;
     }
-    
+
     if ($result['success']) {
         $url = '../assets/uploads/' . $folder . '/' . $result['filename'];
         $originalName = pathinfo($_FILES['file']['name'], PATHINFO_FILENAME);
