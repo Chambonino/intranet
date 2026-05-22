@@ -838,6 +838,12 @@ body {
 .file-icon-box.pdf { background: var(--accent-red); }
 .file-icon-box.doc { background: var(--accent-blue); }
 .file-icon-box.xls { background: var(--accent-green); }
+.file-icon-box.ppt { background: #f57c00; }
+.file-icon-box.img { background: #9c27b0; }
+.file-icon-box.zip { background: #607d8b; }
+.file-icon-box.txt { background: #455a64; }
+.file-icon-box.vid { background: #e91e63; }
+.file-icon-box.aud { background: #00838f; }
 
 .file-details {
     flex: 1;

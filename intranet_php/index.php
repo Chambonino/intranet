@@ -352,8 +352,39 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                     <form method="GET"><select name="dept" class="dept-select" onchange="this.form.submit()"><option value="all">Todos</option><?php foreach ($departamentos as $d): ?><option value="<?php echo $d['id']; ?>" <?php echo $fileDept==$d['id']?'selected':''; ?>><?php echo htmlspecialchars($d['nombre']); ?></option><?php endforeach; ?></select></form>
                 </div>
                 <div class="files-grid">
-                    <?php if (count($archivosPage) > 0): foreach ($archivosPage as $a): $ext = strtolower(pathinfo($a['archivo'], PATHINFO_EXTENSION)); $ic = in_array($ext,['pdf'])?'pdf':(in_array($ext,['doc','docx'])?'doc':(in_array($ext,['xls','xlsx'])?'xls':'')); ?>
-                    <div class="file-card"><div class="file-icon-box <?php echo $ic; ?>"><i class="fas fa-file"></i></div><div class="file-details"><div class="file-name"><?php echo htmlspecialchars($a['nombre']); ?></div><div class="file-meta"><?php echo htmlspecialchars($a['departamento_nombre']); ?> &bull; <?php echo strtoupper($ext); ?></div></div><a href="download.php?id=<?php echo $a['id']; ?>" class="file-download"><i class="fas fa-download"></i></a></div>
+                    <?php if (count($archivosPage) > 0): foreach ($archivosPage as $a):
+                        $ext = strtolower(pathinfo($a['archivo'], PATHINFO_EXTENSION));
+                        // Icono y clase de color según tipo
+                        $fileIcon = 'fa-file';
+                        $fileClass = '';
+                        if ($ext === 'pdf')                              { $fileIcon = 'fa-file-pdf';        $fileClass = 'pdf'; }
+                        elseif (in_array($ext, ['doc','docx']))           { $fileIcon = 'fa-file-word';       $fileClass = 'doc'; }
+                        elseif (in_array($ext, ['xls','xlsx','csv']))     { $fileIcon = 'fa-file-excel';      $fileClass = 'xls'; }
+                        elseif (in_array($ext, ['ppt','pptx']))           { $fileIcon = 'fa-file-powerpoint'; $fileClass = 'ppt'; }
+                        elseif (in_array($ext, ['jpg','jpeg','png','gif','webp'])) { $fileIcon = 'fa-file-image'; $fileClass = 'img'; }
+                        elseif (in_array($ext, ['zip','rar','7z']))       { $fileIcon = 'fa-file-zipper';     $fileClass = 'zip'; }
+                        elseif (in_array($ext, ['txt','md']))             { $fileIcon = 'fa-file-lines';      $fileClass = 'txt'; }
+                        elseif (in_array($ext, ['mp4','avi','mov','wmv'])) { $fileIcon = 'fa-file-video';     $fileClass = 'vid'; }
+                        elseif (in_array($ext, ['mp3','wav','ogg']))      { $fileIcon = 'fa-file-audio';      $fileClass = 'aud'; }
+
+                        // URL del archivo y nombre para mostrar
+                        $fileUrl = 'assets/uploads/files/' . $a['archivo'];
+                        $fileLabel = htmlspecialchars($a['nombre'], ENT_QUOTES);
+                    ?>
+                    <div class="file-card">
+                        <div class="file-icon-box <?php echo $fileClass; ?>"><i class="fas <?php echo $fileIcon; ?>"></i></div>
+                        <div class="file-details">
+                            <div class="file-name"><?php echo htmlspecialchars($a['nombre']); ?></div>
+                            <div class="file-meta"><?php echo htmlspecialchars($a['departamento_nombre']); ?> &bull; <?php echo strtoupper($ext); ?></div>
+                        </div>
+                        <?php if ($ext === 'pdf'): ?>
+                            <a href="javascript:void(0)" onclick="openPdfModal('<?php echo $fileUrl; ?>','<?php echo $fileLabel; ?>')" class="file-download" data-testid="file-view-<?php echo $a['id']; ?>" title="Ver PDF"><i class="fas fa-eye"></i></a>
+                        <?php elseif (in_array($ext, ['jpg','jpeg','png','gif','webp'])): ?>
+                            <a href="javascript:void(0)" onclick="openImageModal('<?php echo $fileUrl; ?>','<?php echo $fileLabel; ?>')" class="file-download" data-testid="file-view-<?php echo $a['id']; ?>" title="Ver imagen"><i class="fas fa-eye"></i></a>
+                        <?php else: ?>
+                            <a href="download.php?id=<?php echo $a['id']; ?>" class="file-download" data-testid="file-download-<?php echo $a['id']; ?>" title="Descargar"><i class="fas fa-download"></i></a>
+                        <?php endif; ?>
+                    </div>
                     <?php endforeach; else: ?><p style="color:var(--text-muted);padding:15px;grid-column:span 3;font-size:0.85rem;">No hay archivos</p><?php endif; ?>
                 </div>
                 <?php if ($totalFilePages > 1): ?><div style="display:flex;justify-content:center;gap:5px;padding:0 20px 20px;"><?php for ($p = 1; $p <= $totalFilePages; $p++): ?><a href="?dept=<?php echo $fileDept; ?>&file_page=<?php echo $p; ?>" style="padding:5px 12px;border-radius:6px;font-size:0.8rem;text-decoration:none;<?php echo $p==$filePage?'background:var(--accent-red);color:white;':'background:var(--bg-input);color:var(--text-secondary);'; ?>"><?php echo $p; ?></a><?php endfor; ?></div><?php endif; ?>
@@ -576,6 +607,40 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
     <footer class="footer"><p>&copy; <?php echo date('Y'); ?> Automotriz Corp. | <a href="admin/login.php" style="color:var(--text-muted);text-decoration:none;">Administraci&oacute;n</a></p></footer>
 
     <script>
+    // ====== Modal PDF (visor inline sin descarga) ======
+    function openPdfModal(url, title) {
+        var m = document.getElementById('pdfModal');
+        if (!m) {
+            m = document.createElement('div');
+            m.id = 'pdfModal';
+            m.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;flex-direction:column;align-items:stretch;justify-content:stretch;';
+            document.body.appendChild(m);
+        }
+        m.innerHTML =
+            '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 22px;background:#1a1a1a;color:white;border-bottom:1px solid #333;">' +
+                '<div style="display:flex;align-items:center;gap:12px;font-weight:600;font-size:0.95rem;"><i class="fas fa-file-pdf" style="color:#e53935;font-size:1.4rem;"></i> ' + title + '</div>' +
+                '<div style="display:flex;gap:10px;">' +
+                    '<a href="' + url + '" target="_blank" rel="noopener" style="background:rgba(255,255,255,0.1);color:white;padding:8px 14px;border-radius:8px;text-decoration:none;font-size:0.8rem;" title="Abrir en pestaña nueva"><i class="fas fa-external-link-alt"></i> Pestaña nueva</a>' +
+                    '<a href="' + url + '" download style="background:rgba(255,255,255,0.1);color:white;padding:8px 14px;border-radius:8px;text-decoration:none;font-size:0.8rem;" title="Descargar"><i class="fas fa-download"></i> Descargar</a>' +
+                    '<button onclick="closePdfModal()" style="background:#e53935;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:0.8rem;"><i class="fas fa-times"></i> Cerrar</button>' +
+                '</div>' +
+            '</div>' +
+            '<iframe src="' + url + '#toolbar=1&navpanes=0" style="flex:1;width:100%;border:none;background:#525659;" data-testid="pdf-iframe"></iframe>';
+        m.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+    function closePdfModal() {
+        var m = document.getElementById('pdfModal');
+        if (m) { m.style.display = 'none'; m.innerHTML = ''; }
+        document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            var m = document.getElementById('pdfModal');
+            if (m && m.style.display === 'flex') closePdfModal();
+        }
+    });
+
     // ====== Copiar ruta UNC al portapapeles (KPIs en file server) ======
     function copyKpiPath(btn, path) {
         if (navigator.clipboard && navigator.clipboard.writeText) {
