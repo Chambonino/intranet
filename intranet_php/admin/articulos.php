@@ -70,6 +70,7 @@ $articulos = $pdo->query("SELECT * FROM articulos ORDER BY fecha_publicacion DES
     <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/lang/summernote-es-ES.min.js"></script>
 </head>
 <body>
     <div class="admin-wrapper">
@@ -184,27 +185,38 @@ $articulos = $pdo->query("SELECT * FROM articulos ORDER BY fecha_publicacion DES
                         };
 
                         $('#wysiwyg').summernote({
-                            height: 300,
+                            height: 350,
+                            lang: 'es-ES',
                             toolbar: [
-                                ['style', ['bold', 'italic', 'underline', 'strikethrough']],
-                                ['font', ['superscript', 'subscript']],
+                                ['style', ['style']],
+                                ['font', ['bold', 'italic', 'underline', 'strikethrough', 'clear']],
+                                ['fontname', ['fontname']],
+                                ['fontsize', ['fontsize']],
+                                ['color', ['color']],
                                 ['para', ['ul', 'ol', 'paragraph']],
-                                ['insert', ['link', 'picture', 'table', 'hr']],
+                                ['height', ['height']],
+                                ['insert', ['link', 'picture', 'video', 'table', 'hr']],
                                 ['custom', ['attachFile']],
                                 ['view', ['fullscreen', 'codeview']]
                             ],
+                            fontNames: ['Arial', 'Calibri', 'Cambria', 'Comic Sans MS', 'Courier New', 'Georgia', 'Helvetica', 'Impact', 'Lucida Console', 'Roboto', 'Segoe UI', 'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana', 'Playfair Display'],
+                            fontNamesIgnoreCheck: ['Roboto', 'Segoe UI', 'Playfair Display'],
+                            fontSizes: ['8', '9', '10', '11', '12', '14', '16', '18', '20', '24', '28', '32', '36', '48', '64'],
                             buttons: { attachFile: AttachFileButton },
                             callbacks: {
                                 onImageUpload: function(files) {
                                     var data = new FormData();
                                     data.append('file', files[0]);
+                                    data.append('folder', 'articles');
                                     $.ajax({
                                         url: '../api/upload_image.php', method: 'POST', data: data,
                                         processData: false, contentType: false,
                                         success: function(r) {
                                             var res = typeof r === 'string' ? JSON.parse(r) : r;
-                                            if (res.url) { $('#wysiwyg').summernote('insertImage', res.url); }
-                                            else { alert(res.error || 'Error al subir'); }
+                                            if (res.url) {
+                                                // URL relativa al sitio (articulo.php está en raíz)
+                                                $('#wysiwyg').summernote('insertImage', 'assets/uploads/articles/' + res.filename);
+                                            } else { alert(res.error || 'Error al subir'); }
                                         }
                                     });
                                 }

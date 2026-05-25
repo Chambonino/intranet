@@ -38,14 +38,8 @@ $encuestaActiva = getEncuestaActiva($pdo);
 $stmtEv = $pdo->query("SELECT e.*, d.nombre as dept_nombre, d.color as dept_color FROM eventos e LEFT JOIN departamentos d ON e.departamento_id = d.id WHERE e.activo = 1 ORDER BY e.fecha_evento DESC LIMIT 30");
 $eventosPage = $stmtEv->fetchAll();
 
-// Artículos paginados
-$artPage = max(1, (int)($_GET['art_page'] ?? 1));
-$artPerPage = 4; $artOffset = ($artPage - 1) * $artPerPage;
-$totalArt = $pdo->query("SELECT COUNT(*) FROM articulos WHERE activo = 1")->fetchColumn();
-$totalArtPages = max(1, ceil($totalArt / $artPerPage));
-$stmtArt = $pdo->prepare("SELECT * FROM articulos WHERE activo = 1 ORDER BY fecha_publicacion DESC LIMIT ? OFFSET ?");
-$stmtArt->execute([$artPerPage, $artOffset]);
-$articulosPage = $stmtArt->fetchAll();
+// Artículos: todos para carrusel horizontal lento (sin paginar)
+$articulosPage = $pdo->query("SELECT * FROM articulos WHERE activo = 1 ORDER BY fecha_publicacion DESC LIMIT 30")->fetchAll();
 
 // Archivos paginados
 $filePage = max(1, (int)($_GET['file_page'] ?? 1));
@@ -378,11 +372,11 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                             <div class="file-meta"><?php echo htmlspecialchars($a['departamento_nombre']); ?> &bull; <?php echo strtoupper($ext); ?></div>
                         </div>
                         <?php if ($ext === 'pdf'): ?>
-                            <a href="javascript:void(0)" onclick="openPdfModal('<?php echo $fileUrl; ?>','<?php echo $fileLabel; ?>')" class="file-download" data-testid="file-view-<?php echo $a['id']; ?>" title="Ver PDF"><i class="fas fa-eye"></i></a>
+                            <a href="<?php echo $fileUrl; ?>" target="_blank" rel="noopener" class="file-download" data-testid="file-view-<?php echo $a['id']; ?>" title="Ver PDF en pestaña nueva"><i class="fas fa-external-link-alt"></i></a>
                         <?php elseif (in_array($ext, ['jpg','jpeg','png','gif','webp'])): ?>
-                            <a href="javascript:void(0)" onclick="openImageModal('<?php echo $fileUrl; ?>','<?php echo $fileLabel; ?>')" class="file-download" data-testid="file-view-<?php echo $a['id']; ?>" title="Ver imagen"><i class="fas fa-eye"></i></a>
+                            <a href="<?php echo $fileUrl; ?>" target="_blank" rel="noopener" class="file-download" data-testid="file-view-<?php echo $a['id']; ?>" title="Ver imagen en pestaña nueva"><i class="fas fa-external-link-alt"></i></a>
                         <?php else: ?>
-                            <a href="download.php?id=<?php echo $a['id']; ?>" class="file-download" data-testid="file-download-<?php echo $a['id']; ?>" title="Descargar"><i class="fas fa-download"></i></a>
+                            <a href="<?php echo $fileUrl; ?>" target="_blank" rel="noopener" class="file-download" data-testid="file-view-<?php echo $a['id']; ?>" title="Abrir en pestaña nueva"><i class="fas fa-external-link-alt"></i></a>
                         <?php endif; ?>
                     </div>
                     <?php endforeach; else: ?><p style="color:var(--text-muted);padding:15px;grid-column:span 3;font-size:0.85rem;">No hay archivos</p><?php endif; ?>
@@ -393,18 +387,25 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
             <!-- Noticias -->
             <div class="section-card">
                 <div class="section-header" style="padding:18px 20px;justify-content:space-between;"><span><i class="fas fa-newspaper"></i> Noticias y Artículos</span><a href="noticias.php" style="font-size:0.75rem;color:var(--accent-blue);text-decoration:none;">Ver todas <i class="fas fa-arrow-right"></i></a></div>
-                <div style="padding:15px 20px 20px;">
-                    <?php if (count($articulosPage) > 0): ?>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:15px;">
-                        <?php foreach ($articulosPage as $art): ?>
-                        <a href="articulo.php?id=<?php echo $art['id']; ?>" style="text-decoration:none;color:inherit;background:var(--bg-input);border-radius:10px;overflow:hidden;">
-                            <?php if ($art['imagen']): ?><img src="assets/uploads/articles/<?php echo $art['imagen']; ?>" style="width:100%;height:130px;object-fit:cover;"><?php else: ?><div style="height:130px;background:#222;display:flex;align-items:center;justify-content:center;"><i class="fas fa-newspaper" style="font-size:2rem;color:#444;"></i></div><?php endif; ?>
-                            <div style="padding:12px;"><div style="font-size:0.65rem;color:var(--text-muted);margin-bottom:4px;"><?php echo formatearFecha($art['fecha_publicacion']); ?></div><div style="font-size:0.88rem;font-weight:600;margin-bottom:4px;"><?php echo htmlspecialchars($art['titulo']); ?></div><div style="font-size:0.74rem;color:var(--text-muted);"><?php echo truncarTexto(strip_tags($art['contenido']), 70); ?></div></div>
+                <div class="carousel-wrap" style="padding:15px 20px 20px;">
+                    <?php if (count($articulosPage) > 0):
+                        $artLoop = count($articulosPage) > 3 ? array_merge($articulosPage, $articulosPage) : $articulosPage;
+                        $artDur = max(30, count($articulosPage) * 8); // 8s por artículo
+                    ?>
+                    <div class="carousel-track" style="display:flex;gap:15px;width:max-content;animation:carousel-scroll <?php echo $artDur; ?>s linear infinite;" data-testid="articulos-carousel">
+                        <?php foreach ($artLoop as $art): ?>
+                        <a href="articulo.php?id=<?php echo $art['id']; ?>" style="width:260px;flex-shrink:0;text-decoration:none;color:inherit;background:var(--bg-input);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.05);transition:transform 0.3s,box-shadow 0.3s;" onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 10px 25px rgba(0,0,0,0.4)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none';">
+                            <?php if ($art['imagen']): ?><img src="assets/uploads/articles/<?php echo $art['imagen']; ?>" style="width:100%;height:140px;object-fit:cover;"><?php else: ?><div style="height:140px;background:linear-gradient(135deg,#1a1a1a,#333);display:flex;align-items:center;justify-content:center;"><i class="fas fa-newspaper" style="font-size:2.2rem;color:#555;"></i></div><?php endif; ?>
+                            <div style="padding:14px 16px;">
+                                <div style="font-size:0.66rem;color:var(--accent-blue);margin-bottom:6px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;"><i class="far fa-calendar"></i> <?php echo formatearFecha($art['fecha_publicacion']); ?></div>
+                                <div style="font-size:0.92rem;font-weight:700;margin-bottom:6px;line-height:1.3;color:var(--text-primary);"><?php echo htmlspecialchars($art['titulo']); ?></div>
+                                <div style="font-size:0.74rem;color:var(--text-muted);line-height:1.45;"><?php echo truncarTexto(strip_tags($art['contenido']), 90); ?></div>
+                                <div style="font-size:0.7rem;color:var(--accent-blue);margin-top:10px;font-weight:600;">Leer más <i class="fas fa-arrow-right"></i></div>
+                            </div>
                         </a>
                         <?php endforeach; ?>
                     </div>
-                    <?php if ($totalArtPages > 1): ?><div style="display:flex;justify-content:center;gap:5px;margin-top:15px;"><?php for ($p = 1; $p <= $totalArtPages; $p++): ?><a href="?art_page=<?php echo $p; ?>" style="padding:5px 12px;border-radius:6px;font-size:0.8rem;text-decoration:none;<?php echo $p == $artPage ? 'background:var(--accent-red);color:white;' : 'background:var(--bg-input);color:var(--text-secondary);'; ?>"><?php echo $p; ?></a><?php endfor; ?></div><?php endif; ?>
-                    <?php else: ?><p style="color:var(--text-muted);">Sin noticias</p><?php endif; ?>
+                    <?php else: ?><p style="color:var(--text-muted);padding:20px 0;text-align:center;">Sin noticias</p><?php endif; ?>
                 </div>
             </div>
 
