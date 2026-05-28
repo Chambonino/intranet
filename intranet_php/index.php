@@ -39,7 +39,7 @@ $stmtEv = $pdo->query("SELECT e.*, d.nombre as dept_nombre, d.color as dept_colo
 $eventosPage = $stmtEv->fetchAll();
 
 // Artículos: todos para carrusel horizontal lento (sin paginar)
-$articulosPage = $pdo->query("SELECT * FROM articulos WHERE activo = 1 ORDER BY fecha_publicacion DESC LIMIT 30")->fetchAll();
+$articulosPage = $pdo->query("SELECT * FROM articulos WHERE activo = 1 ORDER BY fecha_publicacion DESC LIMIT 10")->fetchAll();
 
 // Archivos paginados
 // Archivos: últimos 10 archivos subidos (sin paginación; ver más en archivos.php)
@@ -374,24 +374,31 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
             <!-- Noticias -->
             <div class="section-card">
                 <div class="section-header" style="padding:18px 20px;justify-content:space-between;"><span><i class="fas fa-newspaper"></i> Noticias y Artículos</span><a href="noticias.php" style="font-size:0.75rem;color:var(--accent-blue);text-decoration:none;">Ver todas <i class="fas fa-arrow-right"></i></a></div>
-                <div class="carousel-wrap" style="padding:15px 20px 20px;">
+                <div class="carousel-wrap" style="padding:12px 20px 18px;">
                     <?php if (count($articulosPage) > 0):
+                        // Duplicamos para loop infinito si hay más de 3
                         $artLoop = count($articulosPage) > 3 ? array_merge($articulosPage, $articulosPage) : $articulosPage;
-                        $artDur = max(30, count($articulosPage) * 8); // 8s por artículo
+                        $artDur = max(45, count($articulosPage) * 14); // 14s por artículo -> lento
+                        // ID del artículo más reciente (para badge "Nuevo")
+                        $idMasReciente = $articulosPage[0]['id'] ?? 0;
                     ?>
-                    <div class="carousel-track" style="display:flex;gap:15px;width:max-content;animation:carousel-scroll <?php echo $artDur; ?>s linear infinite;" data-testid="articulos-carousel">
+                    <div class="carousel-track" style="display:flex;gap:12px;width:max-content;animation:carousel-scroll <?php echo $artDur; ?>s linear infinite;" data-testid="articulos-carousel">
                         <?php foreach ($artLoop as $art): ?>
-                        <a href="articulo.php?id=<?php echo $art['id']; ?>" style="width:260px;flex-shrink:0;text-decoration:none;color:inherit;background:var(--bg-input);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.05);transition:transform 0.3s,box-shadow 0.3s;" onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 10px 25px rgba(0,0,0,0.4)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none';">
-                            <?php if ($art['imagen']): ?><img src="assets/uploads/articles/<?php echo $art['imagen']; ?>" style="width:100%;height:140px;object-fit:cover;"><?php else: ?><div style="height:140px;background:linear-gradient(135deg,#1a1a1a,#333);display:flex;align-items:center;justify-content:center;"><i class="fas fa-newspaper" style="font-size:2.2rem;color:#555;"></i></div><?php endif; ?>
-                            <div style="padding:14px 16px;">
-                                <div style="font-size:0.66rem;color:var(--accent-blue);margin-bottom:6px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;"><i class="far fa-calendar"></i> <?php echo formatearFecha($art['fecha_publicacion']); ?></div>
-                                <div style="font-size:0.92rem;font-weight:700;margin-bottom:6px;line-height:1.3;color:var(--text-primary);"><?php echo htmlspecialchars($art['titulo']); ?></div>
-                                <div style="font-size:0.74rem;color:var(--text-muted);line-height:1.45;"><?php echo truncarTexto(strip_tags($art['contenido']), 90); ?></div>
-                                <div style="font-size:0.7rem;color:var(--accent-blue);margin-top:10px;font-weight:600;">Leer más <i class="fas fa-arrow-right"></i></div>
+                        <a href="articulo.php?id=<?php echo $art['id']; ?>" style="position:relative;width:210px;flex-shrink:0;text-decoration:none;color:inherit;background:var(--bg-input);border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.05);transition:transform 0.3s,box-shadow 0.3s;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 22px rgba(0,0,0,0.45)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none';">
+                            <?php if ($art['id'] == $idMasReciente): ?>
+                            <span style="position:absolute;top:8px;right:8px;background:linear-gradient(135deg,#FF1744,#D50000);color:white;font-size:0.55rem;font-weight:800;letter-spacing:1px;padding:3px 8px;border-radius:12px;text-transform:uppercase;box-shadow:0 3px 10px rgba(213,0,0,0.55);z-index:2;animation:newPulseArt 2s ease-in-out infinite;" data-testid="badge-new-articulo-<?php echo $art['id']; ?>"><i class="fas fa-bolt" style="font-size:0.5rem;"></i> Nuevo</span>
+                            <?php endif; ?>
+                            <?php if ($art['imagen']): ?><img src="assets/uploads/articles/<?php echo $art['imagen']; ?>" style="width:100%;height:90px;object-fit:cover;display:block;"><?php else: ?><div style="height:90px;background:linear-gradient(135deg,#1a1a1a,#333);display:flex;align-items:center;justify-content:center;"><i class="fas fa-newspaper" style="font-size:1.6rem;color:#555;"></i></div><?php endif; ?>
+                            <div style="padding:10px 12px 12px;">
+                                <div style="font-size:0.6rem;color:var(--accent-blue);margin-bottom:4px;font-weight:600;letter-spacing:0.4px;text-transform:uppercase;"><i class="far fa-calendar"></i> <?php echo formatearFecha($art['fecha_publicacion']); ?></div>
+                                <div style="font-size:0.82rem;font-weight:700;margin-bottom:5px;line-height:1.25;color:var(--text-primary);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.1em;"><?php echo htmlspecialchars($art['titulo']); ?></div>
+                                <div style="font-size:0.68rem;color:var(--text-muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;"><?php echo truncarTexto(strip_tags($art['contenido']), 70); ?></div>
+                                <div style="font-size:0.65rem;color:var(--accent-blue);margin-top:8px;font-weight:600;">Leer más <i class="fas fa-arrow-right"></i></div>
                             </div>
                         </a>
                         <?php endforeach; ?>
                     </div>
+                    <style>@keyframes newPulseArt { 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }</style>
                     <?php else: ?><p style="color:var(--text-muted);padding:20px 0;text-align:center;">Sin noticias</p><?php endif; ?>
                 </div>
             </div>
