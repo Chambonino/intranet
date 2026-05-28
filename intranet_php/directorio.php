@@ -315,30 +315,28 @@ if (isset($_GET['vcard'])) {
         </div>
         <?php endif; ?>
 
-        <form method="GET" class="dir-filters">
-            <div class="dir-field" style="flex:2;">
-                <label><i class="fas fa-search"></i> Buscar</label>
-                <input type="text" name="q" placeholder="Nombre, apellido o correo..." value="<?php echo htmlspecialchars($busqueda); ?>" data-testid="dir-search">
+        <form method="GET" class="dir-filters" id="dirFiltersForm" onsubmit="event.preventDefault();">
+            <div class="dir-field" style="flex:2;position:relative;">
+                <label><i class="fas fa-search"></i> Buscar en tiempo real</label>
+                <input type="text" name="q" id="dirSearchInput" placeholder="Empiece a escribir... nombre, puesto, correo, teléfono..." value="<?php echo htmlspecialchars($busqueda); ?>" autocomplete="off" data-testid="dir-search">
+                <button type="button" id="dirClearBtn" onclick="clearSearch()" style="position:absolute;right:10px;top:32px;background:rgba(255,255,255,0.1);border:none;color:#cfd8dc;width:26px;height:26px;border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:0.7rem;" title="Limpiar"><i class="fas fa-times"></i></button>
             </div>
             <div class="dir-field">
                 <label><i class="fas fa-building"></i> Departamento</label>
-                <select name="dept" data-testid="dir-dept">
+                <select name="dept" id="dirDeptSelect" data-testid="dir-dept">
                     <option value="">Todos</option>
                     <?php foreach ($departamentos_ad as $d): ?>
                     <option value="<?php echo htmlspecialchars($d); ?>" <?php echo $deptFilter === $d ? 'selected' : ''; ?>><?php echo htmlspecialchars($d); ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
-            <button type="submit" class="dir-btn dir-btn-blue" data-testid="dir-submit"><i class="fas fa-search"></i> Buscar</button>
             <?php if ($busqueda || $deptFilter): ?>
-            <a href="directorio.php" class="dir-btn dir-btn-clear"><i class="fas fa-times"></i> Limpiar</a>
+            <a href="directorio.php" class="dir-btn dir-btn-clear" title="Recargar desde el servidor"><i class="fas fa-sync-alt"></i> Recargar</a>
             <?php endif; ?>
         </form>
 
-        <div class="dir-stats">
-            <i class="fas fa-users"></i> <?php echo count($usuarios); ?> contacto<?php echo count($usuarios) != 1 ? 's' : ''; ?>
-            <?php if ($busqueda): ?> para &quot;<?php echo htmlspecialchars($busqueda); ?>&quot;<?php endif; ?>
-            <?php if ($deptFilter): ?> en <strong><?php echo htmlspecialchars($deptFilter); ?></strong><?php endif; ?>
+        <div class="dir-stats" id="dirStats">
+            <i class="fas fa-users"></i> <span id="dirCountVisible"><?php echo count($usuarios); ?></span> de <strong><?php echo count($usuarios); ?></strong> contacto<?php echo count($usuarios) != 1 ? 's' : ''; ?>
         </div>
 
         <?php if (count($usuarios) > 0): ?>
@@ -350,7 +348,10 @@ if (isset($_GET['vcard'])) {
                 [$color, $grad] = dirColorFor($u['departamento'] ?: $u['nombre']);
                 $vcardText = buildVCardText($u);
             ?>
-            <div class="contact-card" style="--accent: <?php echo $color; ?>; --accent-grad: <?php echo $grad; ?>;" data-testid="contact-card-<?php echo $idx; ?>">
+            <div class="contact-card" style="--accent: <?php echo $color; ?>; --accent-grad: <?php echo $grad; ?>;"
+                data-testid="contact-card-<?php echo $idx; ?>"
+                data-search="<?php echo htmlspecialchars(strtolower(($u['nombre'] ?? '') . ' ' . ($u['nombre_pila'] ?? '') . ' ' . ($u['apellido'] ?? '') . ' ' . ($u['puesto'] ?? '') . ' ' . ($u['email'] ?? '') . ' ' . ($u['telefono'] ?? '') . ' ' . ($u['celular'] ?? '') . ' ' . ($u['oficina'] ?? '')), ENT_QUOTES); ?>"
+                data-dept="<?php echo htmlspecialchars($u['departamento'] ?? '', ENT_QUOTES); ?>">
                 <div class="card-header">
                     <div class="card-avatar-wrap">
                         <?php if ($u['foto']): ?>
@@ -403,6 +404,13 @@ if (isset($_GET['vcard'])) {
             <p style="font-size:0.8rem;">Intente con otros criterios de b&uacute;squeda</p>
         </div>
         <?php endif; ?>
+
+        <!-- Empty state dinámico (cuando el filtro client-side no encuentra nada) -->
+        <div class="dir-empty" id="dirEmptyDynamic" style="display:none;">
+            <i class="fas fa-search"></i>
+            <p style="font-size:1rem;margin-bottom:6px;">Sin coincidencias</p>
+            <p style="font-size:0.8rem;">No hay contactos que coincidan con su búsqueda actual</p>
+        </div>
     </main>
 
     <footer class="footer"><p>&copy; <?php echo date('Y'); ?> Automotriz Corp.</p></footer>
@@ -453,6 +461,76 @@ if (isset($_GET['vcard'])) {
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') closeQR();
     });
+
+    // ====== FILTRADO EN VIVO (client-side) ======
+    (function() {
+        var input = document.getElementById('dirSearchInput');
+        var deptSel = document.getElementById('dirDeptSelect');
+        var clearBtn = document.getElementById('dirClearBtn');
+        var cards = document.querySelectorAll('.contact-card');
+        var countSpan = document.getElementById('dirCountVisible');
+        var emptyDynamic = document.getElementById('dirEmptyDynamic');
+        var grid = document.querySelector('.dir-grid');
+        if (!input) return;
+
+        // Normalizar texto: quitar tildes y minúsculas
+        function normalize(s) {
+            return (s || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function applyFilter() {
+            var q = normalize(input.value.trim());
+            var dept = deptSel.value;
+            var tokens = q.split(/\s+/).filter(Boolean);
+            var visible = 0;
+
+            cards.forEach(function(card) {
+                var haystack = normalize(card.getAttribute('data-search') || '');
+                var cardDept = card.getAttribute('data-dept') || '';
+                var matchDept = !dept || cardDept === dept;
+                // Todos los tokens deben aparecer (AND)
+                var matchSearch = tokens.length === 0 || tokens.every(function(t) { return haystack.indexOf(t) !== -1; });
+                var show = matchDept && matchSearch;
+                card.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+
+            if (countSpan) countSpan.textContent = visible;
+            // Mostrar/ocultar empty state dinámico
+            if (emptyDynamic) {
+                if (visible === 0 && cards.length > 0) {
+                    emptyDynamic.style.display = 'block';
+                    if (grid) grid.style.display = 'none';
+                } else {
+                    emptyDynamic.style.display = 'none';
+                    if (grid) grid.style.display = '';
+                }
+            }
+            // Botón limpiar
+            if (clearBtn) clearBtn.style.display = (input.value.length > 0) ? 'flex' : 'none';
+        }
+
+        // Debounce muy ligero (50ms) para experiencia fluida
+        var t;
+        input.addEventListener('input', function() {
+            clearTimeout(t);
+            t = setTimeout(applyFilter, 50);
+        });
+        deptSel.addEventListener('change', applyFilter);
+
+        // Auto-focus al cargar (opcional, mejora UX)
+        setTimeout(function() { try { input.focus(); } catch(e){} }, 100);
+
+        // Aplicar al cargar (por si vino con valor previo)
+        applyFilter();
+
+        // Función global para botón "X"
+        window.clearSearch = function() {
+            input.value = '';
+            applyFilter();
+            input.focus();
+        };
+    })();
     </script>
 </body>
 </html>
