@@ -42,15 +42,8 @@ $eventosPage = $stmtEv->fetchAll();
 $articulosPage = $pdo->query("SELECT * FROM articulos WHERE activo = 1 ORDER BY fecha_publicacion DESC LIMIT 30")->fetchAll();
 
 // Archivos paginados
-$filePage = max(1, (int)($_GET['file_page'] ?? 1));
-$filePerPage = 6; $fileOffset = ($filePage - 1) * $filePerPage;
-$fileDept = $_GET['dept'] ?? 'all';
-$fw = "WHERE a.activo = 1"; $fp = [];
-if ($fileDept !== 'all') { $fw .= " AND a.departamento_id = ?"; $fp[] = (int)$fileDept; }
-$stmtFC = $pdo->prepare("SELECT COUNT(*) FROM archivos_departamento a $fw"); $stmtFC->execute($fp);
-$totalFiles = $stmtFC->fetchColumn(); $totalFilePages = max(1, ceil($totalFiles / $filePerPage));
-$stmtF = $pdo->prepare("SELECT a.*, d.nombre as departamento_nombre FROM archivos_departamento a LEFT JOIN departamentos d ON a.departamento_id = d.id $fw ORDER BY a.fecha_creacion DESC LIMIT $filePerPage OFFSET $fileOffset");
-$stmtF->execute($fp); $archivosPage = $stmtF->fetchAll();
+// Archivos: últimos 10 archivos subidos (sin paginación; ver más en archivos.php)
+$archivosPage = $pdo->query("SELECT a.*, d.nombre as departamento_nombre FROM archivos_departamento a LEFT JOIN departamentos d ON a.departamento_id = d.id WHERE a.activo = 1 ORDER BY a.fecha_creacion DESC LIMIT 10")->fetchAll();
 
 // Portales paginados
 $pPage = max(1, (int)($_GET['p_page'] ?? 1));
@@ -340,17 +333,16 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                 </div>
             </div>
 
-            <!-- Archivos paginados -->
+            <!-- Archivos por Departamento (últimos 10) -->
             <div class="section-card files-card">
-                <div class="files-header"><div class="files-header-left"><i class="fas fa-folder-open"></i> Archivos por Departamento</div>
-                    <form method="GET"><select name="dept" class="dept-select" onchange="this.form.submit()"><option value="all">Todos</option><?php foreach ($departamentos as $d): ?><option value="<?php echo $d['id']; ?>" <?php echo $fileDept==$d['id']?'selected':''; ?>><?php echo htmlspecialchars($d['nombre']); ?></option><?php endforeach; ?></select></form>
+                <div class="files-header">
+                    <div class="files-header-left"><i class="fas fa-folder-open"></i> Archivos por Departamento</div>
+                    <a href="archivos.php" style="font-size:0.78rem;color:var(--accent-blue);text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:5px;" data-testid="ver-todos-archivos"><i class="fas fa-th-large"></i> Ver todos los archivos <i class="fas fa-arrow-right"></i></a>
                 </div>
                 <div class="files-grid">
                     <?php if (count($archivosPage) > 0): foreach ($archivosPage as $a):
                         $ext = strtolower(pathinfo($a['archivo'], PATHINFO_EXTENSION));
-                        // Icono y clase de color según tipo
-                        $fileIcon = 'fa-file';
-                        $fileClass = '';
+                        $fileIcon = 'fa-file'; $fileClass = '';
                         if ($ext === 'pdf')                              { $fileIcon = 'fa-file-pdf';        $fileClass = 'pdf'; }
                         elseif (in_array($ext, ['doc','docx']))           { $fileIcon = 'fa-file-word';       $fileClass = 'doc'; }
                         elseif (in_array($ext, ['xls','xlsx','csv']))     { $fileIcon = 'fa-file-excel';      $fileClass = 'xls'; }
@@ -360,10 +352,7 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                         elseif (in_array($ext, ['txt','md']))             { $fileIcon = 'fa-file-lines';      $fileClass = 'txt'; }
                         elseif (in_array($ext, ['mp4','avi','mov','wmv'])) { $fileIcon = 'fa-file-video';     $fileClass = 'vid'; }
                         elseif (in_array($ext, ['mp3','wav','ogg']))      { $fileIcon = 'fa-file-audio';      $fileClass = 'aud'; }
-
-                        // URL del archivo y nombre para mostrar
                         $fileUrl = 'assets/uploads/files/' . $a['archivo'];
-                        $fileLabel = htmlspecialchars($a['nombre'], ENT_QUOTES);
                     ?>
                     <div class="file-card">
                         <div class="file-icon-box <?php echo $fileClass; ?>"><i class="fas <?php echo $fileIcon; ?>"></i></div>
@@ -371,17 +360,10 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                             <div class="file-name"><?php echo htmlspecialchars($a['nombre']); ?></div>
                             <div class="file-meta"><?php echo htmlspecialchars($a['departamento_nombre']); ?> &bull; <?php echo strtoupper($ext); ?></div>
                         </div>
-                        <?php if ($ext === 'pdf'): ?>
-                            <a href="<?php echo $fileUrl; ?>" target="_blank" rel="noopener" class="file-download" data-testid="file-view-<?php echo $a['id']; ?>" title="Ver PDF en pestaña nueva"><i class="fas fa-external-link-alt"></i></a>
-                        <?php elseif (in_array($ext, ['jpg','jpeg','png','gif','webp'])): ?>
-                            <a href="<?php echo $fileUrl; ?>" target="_blank" rel="noopener" class="file-download" data-testid="file-view-<?php echo $a['id']; ?>" title="Ver imagen en pestaña nueva"><i class="fas fa-external-link-alt"></i></a>
-                        <?php else: ?>
-                            <a href="<?php echo $fileUrl; ?>" target="_blank" rel="noopener" class="file-download" data-testid="file-view-<?php echo $a['id']; ?>" title="Abrir en pestaña nueva"><i class="fas fa-external-link-alt"></i></a>
-                        <?php endif; ?>
+                        <a href="<?php echo $fileUrl; ?>" target="_blank" rel="noopener" class="file-download" data-testid="file-view-<?php echo $a['id']; ?>" title="Abrir en pestaña nueva"><i class="fas fa-external-link-alt"></i></a>
                     </div>
                     <?php endforeach; else: ?><p style="color:var(--text-muted);padding:15px;grid-column:span 3;font-size:0.85rem;">No hay archivos</p><?php endif; ?>
                 </div>
-                <?php if ($totalFilePages > 1): ?><div style="display:flex;justify-content:center;gap:5px;padding:0 20px 20px;"><?php for ($p = 1; $p <= $totalFilePages; $p++): ?><a href="?dept=<?php echo $fileDept; ?>&file_page=<?php echo $p; ?>" style="padding:5px 12px;border-radius:6px;font-size:0.8rem;text-decoration:none;<?php echo $p==$filePage?'background:var(--accent-red);color:white;':'background:var(--bg-input);color:var(--text-secondary);'; ?>"><?php echo $p; ?></a><?php endfor; ?></div><?php endif; ?>
             </div>
 
             <!-- Noticias -->
