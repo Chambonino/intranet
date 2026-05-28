@@ -90,6 +90,23 @@ function fileSizeHuman($bytes) {
     if ($bytes < 1073741824) return round($bytes/1048576, 1) . ' MB';
     return round($bytes/1073741824, 1) . ' GB';
 }
+
+// ¿Es archivo nuevo (últimos 7 días)?
+function esArchivoNuevo($fecha) {
+    if (!$fecha) return false;
+    try {
+        $t = strtotime($fecha);
+        return $t !== false && (time() - $t) < (7 * 24 * 60 * 60);
+    } catch (Exception $e) { return false; }
+}
+
+// URL absoluta para Office Online Viewer
+function urlAbsoluta($relativa) {
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $dir  = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? '/'), '/\\');
+    return $scheme . '://' . $host . $dir . '/' . ltrim($relativa, '/');
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -196,6 +213,26 @@ function fileSizeHuman($bytes) {
             transform: translateY(-5px);
             box-shadow: 0 18px 40px rgba(0,0,0,0.45);
             border-color: rgba(255,255,255,0.18);
+        }
+        .file-card-pub .new-badge {
+            position: absolute;
+            top: 12px; right: 12px;
+            background: linear-gradient(135deg, #FF1744, #D50000);
+            color: white;
+            font-size: 0.58rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            padding: 4px 9px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 12px rgba(213,0,0,0.5);
+            animation: newPulse 2s ease-in-out infinite;
+            z-index: 3;
+        }
+        .file-card-pub .new-badge i { font-size: 0.55rem; margin-right: 2px; }
+        @keyframes newPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 4px 12px rgba(213,0,0,0.5); }
+            50% { transform: scale(1.06); box-shadow: 0 6px 18px rgba(213,0,0,0.75); }
         }
         .file-card-icon {
             width: 60px; height: 60px;
@@ -337,8 +374,12 @@ function fileSizeHuman($bytes) {
                 $fileUrl = 'assets/uploads/files/' . $a['archivo'];
                 $absPath = __DIR__ . '/assets/uploads/files/' . $a['archivo'];
                 $fileSize = (file_exists($absPath) ? filesize($absPath) : 0);
+                $esNuevo = esArchivoNuevo($a['fecha_creacion'] ?? null);
+                $esOffice = in_array($ext, ['doc','docx','xls','xlsx','ppt','pptx']);
+                $urlAbs = $esOffice ? urlAbsoluta($fileUrl) : '';
             ?>
             <div class="file-card-pub" style="--accent-color: <?php echo $color; ?>;" data-testid="file-card-<?php echo $a['id']; ?>">
+                <?php if ($esNuevo): ?><span class="new-badge" data-testid="badge-new-<?php echo $a['id']; ?>"><i class="fas fa-bolt"></i> Nuevo</span><?php endif; ?>
                 <div class="file-card-icon" style="background: <?php echo $color; ?>;"><i class="fas <?php echo $icon; ?>"></i></div>
                 <div class="file-card-name" title="<?php echo htmlspecialchars($a['nombre']); ?>"><?php echo htmlspecialchars($a['nombre']); ?></div>
                 <?php if (!empty($a['departamento_nombre'])): ?>
@@ -353,6 +394,8 @@ function fileSizeHuman($bytes) {
                     <button class="file-card-btn view" onclick="openPdfModal('<?php echo $fileUrl; ?>','<?php echo htmlspecialchars($a['nombre'], ENT_QUOTES); ?>')" data-testid="file-view-pdf-<?php echo $a['id']; ?>"><i class="fas fa-eye"></i> Ver</button>
                     <?php elseif (in_array($ext, ['jpg','jpeg','png','gif','webp'])): ?>
                     <button class="file-card-btn view" onclick="openImageModalPub('<?php echo $fileUrl; ?>','<?php echo htmlspecialchars($a['nombre'], ENT_QUOTES); ?>')" data-testid="file-view-img-<?php echo $a['id']; ?>"><i class="fas fa-eye"></i> Ver</button>
+                    <?php elseif ($esOffice): ?>
+                    <button class="file-card-btn view" onclick="openOfficeModal('<?php echo addslashes($urlAbs); ?>','<?php echo htmlspecialchars($a['nombre'], ENT_QUOTES); ?>','<?php echo $fileUrl; ?>')" data-testid="file-view-office-<?php echo $a['id']; ?>"><i class="fas fa-eye"></i> Vista previa</button>
                     <?php else: ?>
                     <a href="<?php echo $fileUrl; ?>" target="_blank" rel="noopener" class="file-card-btn view" data-testid="file-view-other-<?php echo $a['id']; ?>"><i class="fas fa-external-link-alt"></i> Abrir</a>
                     <?php endif; ?>
@@ -437,6 +480,8 @@ function fileSizeHuman($bytes) {
             if (m && m.style.display === 'flex') closePdfModal();
             var mi = document.getElementById('imgModalPub');
             if (mi && mi.style.display === 'flex') closeImageModalPub();
+            var mo = document.getElementById('officeModal');
+            if (mo && mo.style.display === 'flex') closeOfficeModal();
         }
     });
 
@@ -460,6 +505,40 @@ function fileSizeHuman($bytes) {
         m.style.display = 'flex';
     }
     function closeImageModalPub() { var m = document.getElementById('imgModalPub'); if (m) m.style.display = 'none'; }
+
+    // ====== MODAL OFFICE ONLINE (Word / Excel / PowerPoint) ======
+    function openOfficeModal(absoluteUrl, title, localUrl) {
+        var m = document.getElementById('officeModal');
+        if (!m) {
+            m = document.createElement('div');
+            m.id = 'officeModal';
+            m.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;flex-direction:column;';
+            document.body.appendChild(m);
+        }
+        var isLocalHost = /^(http:\/\/)?(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/i.test(absoluteUrl);
+        var officeUrl = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(absoluteUrl);
+        var warning = isLocalHost
+            ? '<div style="background:#fff3cd;color:#664d03;padding:12px 22px;font-size:0.82rem;border-bottom:1px solid #ffeeba;display:flex;align-items:center;gap:10px;"><i class="fas fa-exclamation-triangle"></i> El servidor parece privado/local. Office Online Viewer necesita acceder al archivo desde Internet. Si no carga, usa "Descargar" o "Abrir externamente".</div>'
+            : '';
+        m.innerHTML =
+            '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 22px;background:#1a1a1a;color:white;border-bottom:1px solid #333;flex-wrap:wrap;gap:10px;">' +
+                '<div style="display:flex;align-items:center;gap:12px;font-weight:600;font-size:0.95rem;"><i class="fas fa-file-word" style="color:#1976d2;font-size:1.4rem;"></i> ' + title + '</div>' +
+                '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+                    '<a href="' + localUrl + '" target="_blank" rel="noopener" style="background:rgba(255,255,255,0.1);color:white;padding:8px 14px;border-radius:8px;text-decoration:none;font-size:0.8rem;"><i class="fas fa-external-link-alt"></i> Abrir externamente</a>' +
+                    '<a href="' + localUrl + '" download style="background:rgba(255,255,255,0.1);color:white;padding:8px 14px;border-radius:8px;text-decoration:none;font-size:0.8rem;"><i class="fas fa-download"></i> Descargar</a>' +
+                    '<button onclick="closeOfficeModal()" style="background:#e53935;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:0.8rem;"><i class="fas fa-times"></i> Cerrar</button>' +
+                '</div>' +
+            '</div>' +
+            warning +
+            '<iframe src="' + officeUrl + '" style="flex:1;width:100%;border:none;background:#fff;" data-testid="office-iframe"></iframe>';
+        m.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+    function closeOfficeModal() {
+        var m = document.getElementById('officeModal');
+        if (m) { m.style.display = 'none'; m.innerHTML = ''; }
+        document.body.style.overflow = '';
+    }
     </script>
 </body>
 </html>

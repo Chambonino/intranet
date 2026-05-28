@@ -353,8 +353,13 @@ $mesesEsp = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
                         elseif (in_array($ext, ['mp4','avi','mov','wmv'])) { $fileIcon = 'fa-file-video';     $fileClass = 'vid'; }
                         elseif (in_array($ext, ['mp3','wav','ogg']))      { $fileIcon = 'fa-file-audio';      $fileClass = 'aud'; }
                         $fileUrl = 'assets/uploads/files/' . $a['archivo'];
+                        $tCreado = !empty($a['fecha_creacion']) ? strtotime($a['fecha_creacion']) : 0;
+                        $esNuevo = $tCreado > 0 && (time() - $tCreado) < (7 * 24 * 60 * 60);
                     ?>
-                    <div class="file-card">
+                    <div class="file-card" style="position:relative;">
+                        <?php if ($esNuevo): ?>
+                        <span style="position:absolute;top:6px;right:6px;background:linear-gradient(135deg,#FF1744,#D50000);color:white;font-size:0.55rem;font-weight:800;letter-spacing:1px;padding:2px 7px;border-radius:12px;text-transform:uppercase;box-shadow:0 3px 8px rgba(213,0,0,0.5);z-index:2;" data-testid="badge-new-idx-<?php echo $a['id']; ?>"><i class="fas fa-bolt" style="font-size:0.5rem;"></i> Nuevo</span>
+                        <?php endif; ?>
                         <div class="file-icon-box <?php echo $fileClass; ?>"><i class="fas <?php echo $fileIcon; ?>"></i></div>
                         <div class="file-details">
                             <div class="file-name"><?php echo htmlspecialchars($a['nombre']); ?></div>
