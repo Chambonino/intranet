@@ -142,6 +142,7 @@ function getSeccionesAdminPanel() {
         'departamentos'         => ['Departamentos',            'fa-building-user',       'Configuración'],
         // Administración
         'usuarios'              => ['Usuarios',                 'fa-users-cog',           'Administración'],
+        'bitlocker'             => ['BitLocker Recovery',       'fa-key',                 'Administración', true], // true = solo super-admin
     ];
 }
 
@@ -172,9 +173,21 @@ function getPermisosUsuario() {
  * Verificar si el usuario actual puede acceder a una sección del panel.
  */
 function tienePermisoSeccion($clave) {
+    $secciones = getSeccionesAdminPanel();
+    // Si la sección está marcada como solo-super-admin (4to elemento truthy)
+    if (isset($secciones[$clave][3]) && $secciones[$clave][3] === true) {
+        return esSuperAdmin();
+    }
     $p = getPermisosUsuario();
     if ($p === 'all') return true;
     return in_array($clave, (array)$p, true);
+}
+
+/**
+ * ¿El usuario actual es super-admin?
+ */
+function esSuperAdmin() {
+    return getPermisosUsuario() === 'all';
 }
 
 /**

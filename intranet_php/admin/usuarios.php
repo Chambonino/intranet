@@ -212,6 +212,8 @@ $activeMenu = 'usuarios';
                                 </div>
                                 <div class="perm-grid">
                                     <?php foreach ($items as $key => $meta):
+                                        // Saltar secciones que son solo-super-admin
+                                        if (isset($meta[3]) && $meta[3] === true) continue;
                                         $checked = in_array($key, $permisosActuales) ? 'checked' : '';
                                     ?>
                                     <label class="perm-item">
