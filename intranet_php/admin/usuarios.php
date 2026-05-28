@@ -130,7 +130,7 @@ $activeMenu = 'usuarios';
 </head>
 <body>
     <div class="admin-wrapper">
-        <?php include __DIR__ . '/../includes/admin_sidebar.php'; ?>
+        <?php renderAdminSidebar('usuarios'); ?>
 
         <main class="main-content">
             <div class="top-bar">

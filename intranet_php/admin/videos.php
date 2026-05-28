@@ -96,7 +96,7 @@ $videos = $pdo->query("SELECT * FROM videos ORDER BY orden ASC, id DESC")->fetch
 </head>
 <body>
     <div class="admin-wrapper">
-        <?php $activeMenu = 'videos'; include __DIR__ . '/../includes/admin_sidebar.php'; ?>
+        <?php renderAdminSidebar('videos'); ?>
 
         <main class="main-content">
             <div class="top-bar">

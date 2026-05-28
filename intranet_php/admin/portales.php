@@ -70,7 +70,7 @@ $portales = $pdo->query("SELECT * FROM portales_clientes ORDER BY orden ASC, nom
 </head>
 <body>
     <div class="admin-wrapper">
-        <?php $activeMenu = 'portales'; include __DIR__ . '/../includes/admin_sidebar.php'; ?>
+        <?php renderAdminSidebar('portales'); ?>
 
         <main class="main-content">
             <div class="top-bar">

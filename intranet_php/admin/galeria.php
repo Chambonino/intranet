@@ -85,7 +85,7 @@ $fotos = $pdo->query("SELECT g.*, d.nombre as dept_nombre FROM galeria_fotos g L
 </head>
 <body>
     <div class="admin-wrapper">
-        <?php $activeMenu = 'galeria'; include __DIR__ . '/../includes/admin_sidebar.php'; ?>
+        <?php renderAdminSidebar('galeria'); ?>
         <main class="main-content">
             <div class="top-bar"><h1><i class="fas fa-photo-video"></i> Galería de Fotos</h1><a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Salir</a></div>
 

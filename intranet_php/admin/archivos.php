@@ -74,7 +74,7 @@ $archivos = $pdo->query("SELECT a.*, d.nombre as departamento_nombre FROM archiv
 </head>
 <body>
     <div class="admin-wrapper">
-        <?php $activeMenu = 'archivos'; include __DIR__ . '/../includes/admin_sidebar.php'; ?>
+        <?php renderAdminSidebar('archivos'); ?>
 
         <main class="main-content">
             <div class="top-bar">

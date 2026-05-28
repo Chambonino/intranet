@@ -83,7 +83,7 @@ $eventos = $pdo->query("SELECT e.*, d.nombre as dept_nombre FROM eventos e LEFT 
 </head>
 <body>
     <div class="admin-wrapper">
-        <?php $activeMenu = 'eventos'; include __DIR__ . '/../includes/admin_sidebar.php'; ?>
+        <?php renderAdminSidebar('eventos'); ?>
         <main class="main-content">
             <div class="top-bar">
                 <h1><i class="fas fa-calendar-alt"></i> Eventos</h1>

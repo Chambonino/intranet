@@ -30,7 +30,7 @@ $flash = getFlashMessage();
 <body>
     <div class="admin-wrapper">
         <!-- Sidebar -->
-        <?php $activeMenu = 'index'; include __DIR__ . '/../includes/admin_sidebar.php'; ?>
+        <?php renderAdminSidebar('index'); ?>
 
         <!-- Main Content -->
         <main class="main-content">

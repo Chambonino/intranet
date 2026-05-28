@@ -57,7 +57,7 @@ $organigramas = $pdo->query("SELECT * FROM organigrama ORDER BY activo DESC, id 
 </head>
 <body>
     <div class="admin-wrapper">
-        <?php $activeMenu = 'organigrama'; include __DIR__ . '/../includes/admin_sidebar.php'; ?>
+        <?php renderAdminSidebar('organigrama'); ?>
         <main class="main-content">
             <div class="top-bar"><h1><i class="fas fa-sitemap"></i> Organigrama Corporativo</h1><a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Salir</a></div>
             <?php if ($flash): ?><div class="alert alert-<?php echo $flash['type']; ?>"><?php echo $flash['message']; ?></div><?php endif; ?>

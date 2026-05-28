@@ -178,6 +178,29 @@ function tienePermisoSeccion($clave) {
 }
 
 /**
+ * Renderizar el sidebar del panel admin (con fallback si falta el partial).
+ * Uso: <?php renderAdminSidebar('slider'); ?>
+ */
+function renderAdminSidebar($active = '') {
+    $path = __DIR__ . '/admin_sidebar.php';
+    if (file_exists($path)) {
+        $activeMenu = $active;
+        include $path;
+    } else {
+        // Fallback mínimo si falta includes/admin_sidebar.php
+        echo '<aside class="sidebar">'
+            . '<div class="sidebar-header"><h2>Intranet Admin</h2></div>'
+            . '<nav class="sidebar-menu"><div class="menu-section">'
+            . '<a href="index.php"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>'
+            . '<a href="usuarios.php"><i class="fas fa-users-cog"></i> <span>Usuarios</span></a>'
+            . '</div></nav>'
+            . '<div style="margin:14px;padding:12px;background:rgba(244,67,54,0.15);border:1px solid #f44336;border-radius:8px;color:#ffcdd2;font-size:0.78rem;line-height:1.4;">'
+            . '<strong>⚠ Archivo faltante</strong><br>Copie <code>includes/admin_sidebar.php</code> del ZIP a su carpeta htdocs.'
+            . '</div></aside>';
+    }
+}
+
+/**
  * Obtener mensaje flash
  */
 function getFlashMessage() {

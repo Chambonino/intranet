@@ -57,7 +57,7 @@ $countdowns = $pdo->query("SELECT * FROM cuenta_regresiva ORDER BY fecha_evento 
 </head>
 <body>
     <div class="admin-wrapper">
-        <?php $activeMenu = 'countdown'; include __DIR__ . '/../includes/admin_sidebar.php'; ?>
+        <?php renderAdminSidebar('countdown'); ?>
 
         <main class="main-content">
             <div class="top-bar">

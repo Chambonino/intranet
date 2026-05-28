@@ -74,7 +74,7 @@ $empleados = $pdo->query("SELECT e.*, d.nombre as departamento_nombre FROM emple
 </head>
 <body>
     <div class="admin-wrapper">
-        <?php $activeMenu = 'cumpleanos'; include __DIR__ . '/../includes/admin_sidebar.php'; ?>
+        <?php renderAdminSidebar('cumpleanos'); ?>
 
         <main class="main-content">
             <div class="top-bar">

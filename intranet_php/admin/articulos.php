@@ -74,7 +74,7 @@ $articulos = $pdo->query("SELECT * FROM articulos ORDER BY fecha_publicacion DES
 </head>
 <body>
     <div class="admin-wrapper">
-        <?php $activeMenu = 'articulos'; include __DIR__ . '/../includes/admin_sidebar.php'; ?>
+        <?php renderAdminSidebar('articulos'); ?>
 
         <main class="main-content">
             <div class="top-bar">

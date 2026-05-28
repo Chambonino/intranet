@@ -58,7 +58,7 @@ $avisos = $pdo->query("SELECT * FROM avisos ORDER BY fecha_creacion DESC")->fetc
 </head>
 <body>
     <div class="admin-wrapper">
-        <?php $activeMenu = 'avisos'; include __DIR__ . '/../includes/admin_sidebar.php'; ?>
+        <?php renderAdminSidebar('avisos'); ?>
 
         <main class="main-content">
             <div class="top-bar">

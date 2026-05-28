@@ -62,7 +62,7 @@ $apps = $pdo->query("SELECT * FROM aplicaciones ORDER BY orden ASC")->fetchAll()
 </head>
 <body>
     <div class="admin-wrapper">
-        <?php $activeMenu = 'aplicaciones'; include __DIR__ . '/../includes/admin_sidebar.php'; ?>
+        <?php renderAdminSidebar('aplicaciones'); ?>
         <main class="main-content">
             <div class="top-bar"><h1><i class="fas fa-th"></i> Aplicaciones Rápidas</h1><a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Salir</a></div>
             <?php if ($flash): ?><div class="alert alert-<?php echo $flash['type']; ?>"><?php echo $flash['message']; ?></div><?php endif; ?>

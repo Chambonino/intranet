@@ -81,7 +81,7 @@ $slides = $pdo->query("SELECT * FROM slider_noticias ORDER BY orden ASC, id DESC
 <body>
     <div class="admin-wrapper">
         <!-- Sidebar -->
-        <?php $activeMenu = 'slider'; include __DIR__ . '/../includes/admin_sidebar.php'; ?>
+        <?php renderAdminSidebar('slider'); ?>
 
         <main class="main-content">
             <div class="top-bar">

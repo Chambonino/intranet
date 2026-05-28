@@ -190,7 +190,7 @@ function renderTree($nodes, $level = 0) {
 </head>
 <body>
     <div class="admin-wrapper">
-        <?php $activeMenu = 'organigrama_builder'; include __DIR__ . '/../includes/admin_sidebar.php'; ?>
+        <?php renderAdminSidebar('organigrama_builder'); ?>
         <main class="main-content">
             <div class="top-bar"><h1><i class="fas fa-project-diagram"></i> Constructor de Organigrama</h1><a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Salir</a></div>
             <?php if ($flash): ?><div class="alert alert-<?php echo $flash['type']; ?>"><?php echo $flash['message']; ?></div><?php endif; ?>
