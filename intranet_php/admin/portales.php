@@ -70,30 +70,7 @@ $portales = $pdo->query("SELECT * FROM portales_clientes ORDER BY orden ASC, nom
 </head>
 <body>
     <div class="admin-wrapper">
-        <aside class="sidebar">
-            <div class="sidebar-header"><h2>Intranet Admin</h2></div>
-            <nav class="sidebar-menu">
-                <div class="menu-section">
-                    <a href="index.php"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
-                </div>
-                <div class="menu-section">
-                    <a href="slider.php"><i class="fas fa-images"></i> <span>Slider Noticias</span></a>
-                    <a href="eventos.php"><i class="fas fa-calendar-alt"></i> <span>Eventos</span></a>
-                    <a href="cumpleanos.php"><i class="fas fa-birthday-cake"></i> <span>Cumpleaños</span></a>
-                    <a href="galeria.php"><i class="fas fa-photo-video"></i> <span>Galería Fotos</span></a>
-                    <a href="videos.php"><i class="fas fa-video"></i> <span>Videos</span></a>
-                    <a href="articulos.php"><i class="fas fa-newspaper"></i> <span>Artículos</span></a>
-                    <a href="encuestas.php"><i class="fas fa-poll"></i> <span>Encuestas</span></a>
-                </div>
-                <div class="menu-section">
-                    <a href="archivos.php"><i class="fas fa-folder"></i> <span>Archivos Depto.</span></a>
-                    <a href="portales.php" class="active"><i class="fas fa-external-link-alt"></i> <span>Portales Clientes</span></a>
-                    <a href="countdown.php"><i class="fas fa-hourglass-half"></i> <span>Cuenta Regresiva</span></a>
-                    <a href="avisos.php"><i class="fas fa-bullhorn"></i> <span>Avisos</span></a>
-                    <a href="usuarios.php"><i class="fas fa-users-cog"></i> <span>Usuarios</span></a>
-                </div>
-            </nav>
-        </aside>
+        <?php $activeMenu = 'portales'; include __DIR__ . '/../includes/admin_sidebar.php'; ?>
 
         <main class="main-content">
             <div class="top-bar">

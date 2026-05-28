@@ -97,12 +97,84 @@ function isLoggedIn() {
 
 /**
  * Redirigir si no está autenticado
+ * Y verificar permiso de la sección actual según el nombre del archivo
  */
 function requireLogin() {
     if (!isLoggedIn()) {
         header('Location: login.php');
         exit;
     }
+    // Auto-verificación de permisos según el nombre del script
+    $script = basename($_SERVER['SCRIPT_NAME'] ?? '', '.php');
+    $libres = ['index','login','logout']; // estos no requieren permiso de sección
+    if (!in_array($script, $libres) && !tienePermisoSeccion($script)) {
+        setFlashMessage('No tiene permisos para acceder a esta sección.', 'danger');
+        header('Location: index.php');
+        exit;
+    }
+}
+
+/**
+ * Definición central de las secciones del panel admin.
+ * Cada entrada: clave => [label, icono FA, grupo, archivo]
+ */
+function getSeccionesAdminPanel() {
+    return [
+        // Contenido
+        'slider'                => ['Slider Noticias',         'fa-images',              'Contenido'],
+        'eventos'               => ['Eventos',                  'fa-calendar-alt',        'Contenido'],
+        'cumpleanos'            => ['Cumpleaños',               'fa-birthday-cake',       'Contenido'],
+        'galeria'               => ['Galería Fotos',            'fa-photo-video',         'Contenido'],
+        'videos'                => ['Videos',                   'fa-video',               'Contenido'],
+        'articulos'             => ['Artículos',                'fa-newspaper',           'Contenido'],
+        'encuestas'             => ['Encuestas',                'fa-poll',                'Contenido'],
+        // Configuración
+        'archivos'              => ['Archivos Depto.',          'fa-folder',              'Configuración'],
+        'portales'              => ['Portales Clientes',        'fa-external-link-alt',   'Configuración'],
+        'countdown'             => ['Cuenta Regresiva',         'fa-hourglass-half',      'Configuración'],
+        'avisos'                => ['Avisos',                   'fa-bullhorn',            'Configuración'],
+        'kpis'                  => ['KPIs',                     'fa-chart-line',          'Configuración'],
+        'aplicaciones'          => ['Aplicaciones',             'fa-th',                  'Configuración'],
+        'organigrama_drag'      => ['Organigramas (Drag&Drop)', 'fa-project-diagram',     'Configuración'],
+        'organigrama_builder'   => ['Organigrama Jerárquico',   'fa-sitemap',             'Configuración'],
+        'organigrama'           => ['Organigrama Imagen',       'fa-image',               'Configuración'],
+        'compania'              => ['Compañía',                 'fa-building',            'Configuración'],
+        'departamentos'         => ['Departamentos',            'fa-building-user',       'Configuración'],
+        // Administración
+        'usuarios'              => ['Usuarios',                 'fa-users-cog',           'Administración'],
+    ];
+}
+
+/**
+ * Obtener lista de permisos del usuario actual.
+ * - Super admin -> 'all' (acceso total)
+ * - Sin permisos definidos en BD -> [] (sin acceso, salvo index/logout)
+ * - Si hay permisos definidos -> array de claves
+ */
+function getPermisosUsuario() {
+    global $pdo;
+    if (!isLoggedIn()) return [];
+    static $cache = null;
+    if ($cache !== null) return $cache;
+    try {
+        $stmt = $pdo->prepare("SELECT es_super_admin, permisos FROM administradores WHERE id = ? LIMIT 1");
+        $stmt->execute([$_SESSION['admin_id']]);
+        $row = $stmt->fetch();
+    } catch (Exception $e) { $row = null; }
+    if (!$row) { $cache = []; return $cache; }
+    if (!empty($row['es_super_admin'])) { $cache = 'all'; return $cache; }
+    $p = $row['permisos'] ? json_decode($row['permisos'], true) : [];
+    $cache = is_array($p) ? $p : [];
+    return $cache;
+}
+
+/**
+ * Verificar si el usuario actual puede acceder a una sección del panel.
+ */
+function tienePermisoSeccion($clave) {
+    $p = getPermisosUsuario();
+    if ($p === 'all') return true;
+    return in_array($clave, (array)$p, true);
 }
 
 /**

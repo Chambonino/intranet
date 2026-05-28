@@ -190,33 +190,7 @@ function renderTree($nodes, $level = 0) {
 </head>
 <body>
     <div class="admin-wrapper">
-        <aside class="sidebar">
-            <div class="sidebar-header"><h2>Intranet Admin</h2></div>
-            <nav class="sidebar-menu">
-                <div class="menu-section"><a href="index.php"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a></div>
-                <div class="menu-section">
-                    <a href="slider.php"><i class="fas fa-images"></i> <span>Slider</span></a>
-                    <a href="eventos.php"><i class="fas fa-calendar-alt"></i> <span>Eventos</span></a>
-                    <a href="cumpleanos.php"><i class="fas fa-birthday-cake"></i> <span>Cumpleaños</span></a>
-                    <a href="galeria.php"><i class="fas fa-photo-video"></i> <span>Galería</span></a>
-                    <a href="videos.php"><i class="fas fa-video"></i> <span>Videos</span></a>
-                    <a href="articulos.php"><i class="fas fa-newspaper"></i> <span>Artículos</span></a>
-                    <a href="encuestas.php"><i class="fas fa-poll"></i> <span>Encuestas</span></a>
-                </div>
-                <div class="menu-section">
-                    <a href="aplicaciones.php"><i class="fas fa-th"></i> <span>Aplicaciones</span></a>
-                    <a href="kpis.php"><i class="fas fa-chart-line"></i> <span>KPIs</span></a>
-                    <a href="organigrama_drag.php"><i class="fas fa-project-diagram"></i> <span>Organigramas (Drag&Drop)</span></a>
-                    <a href="organigrama_builder.php" class="active"><i class="fas fa-sitemap"></i> <span>Organigrama Jerárquico</span></a>
-                    <a href="organigrama.php"><i class="fas fa-image"></i> <span>Organigrama Imagen</span></a>
-                    <a href="archivos.php"><i class="fas fa-folder"></i> <span>Archivos</span></a>
-                    <a href="portales.php"><i class="fas fa-external-link-alt"></i> <span>Portales</span></a>
-                    <a href="compania.php"><i class="fas fa-building"></i> <span>Compañía</span></a>
-                    <a href="avisos.php"><i class="fas fa-bullhorn"></i> <span>Avisos</span></a>
-                    <a href="usuarios.php"><i class="fas fa-users-cog"></i> <span>Usuarios</span></a>
-                </div>
-            </nav>
-        </aside>
+        <?php $activeMenu = 'organigrama_builder'; include __DIR__ . '/../includes/admin_sidebar.php'; ?>
         <main class="main-content">
             <div class="top-bar"><h1><i class="fas fa-project-diagram"></i> Constructor de Organigrama</h1><a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Salir</a></div>
             <?php if ($flash): ?><div class="alert alert-<?php echo $flash['type']; ?>"><?php echo $flash['message']; ?></div><?php endif; ?>

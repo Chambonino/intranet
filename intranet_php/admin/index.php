@@ -30,42 +30,7 @@ $flash = getFlashMessage();
 <body>
     <div class="admin-wrapper">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <img src="../assets/img/logo.png" alt="Logo" onerror="this.style.display='none'">
-                <h2>Intranet Admin</h2>
-            </div>
-            <nav class="sidebar-menu">
-                <div class="menu-section">
-                    <span class="menu-section-title">Principal</span>
-                    <a href="index.php" class="active"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
-                </div>
-                <div class="menu-section">
-                    <span class="menu-section-title">Contenido</span>
-                    <a href="slider.php"><i class="fas fa-images"></i> <span>Slider Noticias</span></a>
-                    <a href="eventos.php"><i class="fas fa-calendar-alt"></i> <span>Eventos</span></a>
-                    <a href="cumpleanos.php"><i class="fas fa-birthday-cake"></i> <span>Cumpleaños</span></a>
-                    <a href="galeria.php"><i class="fas fa-photo-video"></i> <span>Galería Fotos</span></a>
-                    <a href="videos.php"><i class="fas fa-video"></i> <span>Videos</span></a>
-                    <a href="articulos.php"><i class="fas fa-newspaper"></i> <span>Artículos</span></a>
-                    <a href="encuestas.php"><i class="fas fa-poll"></i> <span>Encuestas</span></a>
-                </div>
-                <div class="menu-section">
-                    <span class="menu-section-title">Configuración</span>
-                    <a href="archivos.php"><i class="fas fa-folder"></i> <span>Archivos Depto.</span></a>
-                    <a href="portales.php"><i class="fas fa-external-link-alt"></i> <span>Portales Clientes</span></a>
-                    <a href="countdown.php"><i class="fas fa-hourglass-half"></i> <span>Cuenta Regresiva</span></a>
-                    <a href="avisos.php"><i class="fas fa-bullhorn"></i> <span>Avisos</span></a>
-                    <a href="kpis.php"><i class="fas fa-chart-line"></i> <span>KPIs</span></a>
-                    <a href="aplicaciones.php"><i class="fas fa-th"></i> <span>Aplicaciones</span></a>
-                    <a href="organigrama_drag.php"><i class="fas fa-project-diagram"></i> <span>Organigramas (Drag&Drop)</span></a>
-                    <a href="organigrama_builder.php"><i class="fas fa-sitemap"></i> <span>Organigrama Jerárquico</span></a>
-                    <a href="organigrama.php"><i class="fas fa-image"></i> <span>Organigrama Imagen</span></a>
-                    <a href="compania.php"><i class="fas fa-building"></i> <span>Compañía</span></a>
-                    <a href="usuarios.php"><i class="fas fa-users-cog"></i> <span>Usuarios</span></a>
-                </div>
-            </nav>
-        </aside>
+        <?php $activeMenu = 'index'; include __DIR__ . '/../includes/admin_sidebar.php'; ?>
 
         <!-- Main Content -->
         <main class="main-content">
